@@ -2949,8 +2949,6 @@ $$
 
 Ese bloque de unas diez líneas es, esencialmente, **todo el algoritmo de backpropagation para tu red**.
 
-En el siguiente nivel útil de este experimento, yo iría todavía más despacio y cogería **solo el ejemplo \(X=(1,0), y=1\)**, eliminando temporalmente el batch. Podemos calcular a mano, número por número, los dos valores de \(z_1\), las dos sigmoides, \(z_2\), \(\hat y\), el MSE y después **cada una de las derivadas hasta llegar a los cuatro pesos**, dibujando simultáneamente el grafo computacional. Después volveríamos a introducir las matrices `(4,2)` y verías exactamente cómo NumPy convierte esas cuatro cuentas individuales en `X.T @ dz1`. Esa sería la mejor forma de hacer que la regla de cadena y las multiplicaciones matriciales dejen de parecer fórmulas memorizadas y se vuelvan intuitivas.
-
 
 
 
