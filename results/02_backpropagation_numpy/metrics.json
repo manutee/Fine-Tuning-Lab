@@ -1,0 +1,65 @@
+{
+  "experiment": "02_backpropagation_numpy",
+  "source_file": "notebooks/02_backpropagation_numpy.py",
+  "created_at": "2026-08-19",
+  "question": "Puede una red con una capa oculta, implementada solo con NumPy, aprender XOR mediante backpropagation manual?",
+  "config": {
+    "seed": 42,
+    "hidden_neurons": 2,
+    "learning_rate": 0.5,
+    "epochs": 10000,
+    "init_scale": 0.5,
+    "loss": "MSE",
+    "activation": "sigmoid"
+  },
+  "shapes": {
+    "X": [4, 2],
+    "y": [4, 1],
+    "W1": [2, 2],
+    "b1": [1, 2],
+    "W2": [2, 1],
+    "b2": [1, 1],
+    "y_pred": [4, 1],
+    "dW1": [2, 2],
+    "db1": [1, 2],
+    "dW2": [2, 1],
+    "db2": [1, 1]
+  },
+  "one_step_check": {
+    "loss_before": 0.2922916243810897,
+    "loss_after": 0.28637467082417883,
+    "loss_decreased": true
+  },
+  "training_log": {
+    "epoch_0_loss": 0.292292,
+    "epoch_1000_loss": 0.249931,
+    "epoch_2000_loss": 0.248929,
+    "epoch_3000_loss": 0.195270,
+    "epoch_4000_loss": 0.025647,
+    "epoch_5000_loss": 0.008377,
+    "epoch_6000_loss": 0.004754,
+    "epoch_7000_loss": 0.003267,
+    "epoch_8000_loss": 0.002472,
+    "epoch_9000_loss": 0.001981,
+    "final_loss": 0.0016485673777804845
+  },
+  "final_predictions": [
+    [0.03908334],
+    [0.95662095],
+    [0.95598973],
+    [0.03531293]
+  ],
+  "final_classes": [
+    [0],
+    [1],
+    [1],
+    [0]
+  ],
+  "labels": [
+    [0],
+    [1],
+    [1],
+    [0]
+  ],
+  "accuracy": 1.0
+}

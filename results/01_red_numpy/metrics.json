@@ -1,0 +1,28 @@
+{
+  "experiment": "01_red_numpy",
+  "question": "Puede una red minima con NumPy aprender una relacion lineal y = wx + b?",
+  "created_at": "2026-09-13T13:41:02",
+  "config": {
+    "samples": 100,
+    "true_w": 3.0,
+    "true_b": 2.0,
+    "noise": 0.5,
+    "learning_rate": 0.05,
+    "num_epochs": 100,
+    "seed": 42
+  },
+  "results": {
+    "loss_initial": 16.52426666233695,
+    "loss_final": 0.14555798114692786,
+    "best_loss": 0.14555798114692786,
+    "best_epoch": 99,
+    "learned_w": 2.9475574782879645,
+    "learned_b": 1.9748323285210971,
+    "abs_error_w": 0.05244252171203545,
+    "abs_error_b": 0.025167671478902864
+  },
+  "checks": {
+    "finite_losses": true,
+    "loss_decreased": true
+  }
+}

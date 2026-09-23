@@ -1,0 +1,377 @@
+{
+  "directed": false,
+  "multigraph": false,
+  "graph": {},
+  "nodes": [
+    {
+      "label": "01_red_numpy.py",
+      "file_type": "code",
+      "source_file": "notebooks/01_red_numpy.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "notebooks_01_red_numpy",
+      "community": 0,
+      "norm_label": "01_red_numpy.py"
+    },
+    {
+      "label": "predict()",
+      "file_type": "code",
+      "source_file": "notebooks/01_red_numpy.py",
+      "source_location": "L65",
+      "_origin": "ast",
+      "id": "notebooks_01_red_numpy_predict",
+      "community": 0,
+      "norm_label": "predict()"
+    },
+    {
+      "label": "mse_loss()",
+      "file_type": "code",
+      "source_file": "notebooks/01_red_numpy.py",
+      "source_location": "L68",
+      "_origin": "ast",
+      "id": "notebooks_01_red_numpy_mse_loss",
+      "community": 0,
+      "norm_label": "mse_loss()"
+    },
+    {
+      "label": "compute_gradientes()",
+      "file_type": "code",
+      "source_file": "notebooks/01_red_numpy.py",
+      "source_location": "L72",
+      "_origin": "ast",
+      "id": "notebooks_01_red_numpy_compute_gradientes",
+      "community": 0,
+      "norm_label": "compute_gradientes()"
+    },
+    {
+      "label": "02_backpropagation_numpy.py",
+      "file_type": "code",
+      "source_file": "notebooks/02_backpropagation_numpy.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "notebooks_02_backpropagation_numpy",
+      "community": 1,
+      "norm_label": "02_backpropagation_numpy.py"
+    },
+    {
+      "label": "sigmoid()",
+      "file_type": "code",
+      "source_file": "notebooks/02_backpropagation_numpy.py",
+      "source_location": "L43",
+      "_origin": "ast",
+      "id": "notebooks_02_backpropagation_numpy_sigmoid",
+      "community": 1,
+      "norm_label": "sigmoid()"
+    },
+    {
+      "label": "forward()",
+      "file_type": "code",
+      "source_file": "notebooks/02_backpropagation_numpy.py",
+      "source_location": "L46",
+      "_origin": "ast",
+      "id": "notebooks_02_backpropagation_numpy_forward",
+      "community": 1,
+      "norm_label": "forward()"
+    },
+    {
+      "label": "MSE()",
+      "file_type": "code",
+      "source_file": "notebooks/02_backpropagation_numpy.py",
+      "source_location": "L74",
+      "_origin": "ast",
+      "id": "notebooks_02_backpropagation_numpy_mse",
+      "community": 1,
+      "norm_label": "mse()"
+    },
+    {
+      "label": "Derivada_Activacion()",
+      "file_type": "code",
+      "source_file": "notebooks/02_backpropagation_numpy.py",
+      "source_location": "L81",
+      "_origin": "ast",
+      "id": "notebooks_02_backpropagation_numpy_derivada_activacion",
+      "community": 2,
+      "norm_label": "derivada_activacion()"
+    },
+    {
+      "label": "backward()",
+      "file_type": "code",
+      "source_file": "notebooks/02_backpropagation_numpy.py",
+      "source_location": "L86",
+      "_origin": "ast",
+      "id": "notebooks_02_backpropagation_numpy_backward",
+      "community": 2,
+      "norm_label": "backward()"
+    },
+    {
+      "label": "Funci\u00f3n destinada al c\u00e1lculo de los gradientes de la red. Devolvemos: dw1, db1,\u2026",
+      "file_type": "rationale",
+      "source_file": "notebooks/02_backpropagation_numpy.py",
+      "source_location": "L87",
+      "_origin": "ast",
+      "id": "notebooks_02_backpropagation_numpy_rationale_87",
+      "community": 2,
+      "norm_label": "funcion destinada al calculo de los gradientes de la red. devolvemos: dw1, db1,..."
+    },
+    {
+      "label": "03_xor_pytorch_autograd.py",
+      "file_type": "code",
+      "source_file": "notebooks/03_xor_pytorch_autograd.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "notebooks_03_xor_pytorch_autograd",
+      "community": 7,
+      "norm_label": "03_xor_pytorch_autograd.py"
+    },
+    {
+      "label": "__init__.py",
+      "file_type": "code",
+      "source_file": "src/__init__.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "src_init",
+      "community": 5,
+      "norm_label": "__init__.py"
+    },
+    {
+      "label": "Codigo reutilizable de Fine-Tuning Lab. Este paquete debe mantenerse pequeno.\u2026",
+      "file_type": "rationale",
+      "source_file": "src/__init__.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "src_init_rationale_1",
+      "community": 5,
+      "norm_label": "codigo reutilizable de fine-tuning lab. este paquete debe mantenerse pequeno...."
+    },
+    {
+      "label": "data.py",
+      "file_type": "code",
+      "source_file": "src/data.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "src_data",
+      "community": 3,
+      "norm_label": "data.py"
+    },
+    {
+      "label": "Funciones reutilizables para datos. Responsabilidad: Reunir, cuando haga falta,\u2026",
+      "file_type": "rationale",
+      "source_file": "src/data.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "src_data_rationale_1",
+      "community": 3,
+      "norm_label": "funciones reutilizables para datos. responsabilidad: reunir, cuando haga falta,..."
+    },
+    {
+      "label": "evaluation.py",
+      "file_type": "code",
+      "source_file": "src/evaluation.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "src_evaluation",
+      "community": 4,
+      "norm_label": "evaluation.py"
+    },
+    {
+      "label": "Funciones reutilizables para evaluacion. Responsabilidad: Centralizar metricas\u2026",
+      "file_type": "rationale",
+      "source_file": "src/evaluation.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "src_evaluation_rationale_1",
+      "community": 4,
+      "norm_label": "funciones reutilizables para evaluacion. responsabilidad: centralizar metricas..."
+    },
+    {
+      "label": "training.py",
+      "file_type": "code",
+      "source_file": "src/training.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "src_training",
+      "community": 6,
+      "norm_label": "training.py"
+    },
+    {
+      "label": "Funciones reutilizables para entrenamiento. Responsabilidad: Guardar piezas\u2026",
+      "file_type": "rationale",
+      "source_file": "src/training.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "src_training_rationale_1",
+      "community": 6,
+      "norm_label": "funciones reutilizables para entrenamiento. responsabilidad: guardar piezas..."
+    }
+  ],
+  "links": [
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "notebooks/01_red_numpy.py",
+      "source_location": "L72",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "notebooks_01_red_numpy",
+      "target": "notebooks_01_red_numpy_compute_gradientes",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "notebooks/01_red_numpy.py",
+      "source_location": "L68",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "notebooks_01_red_numpy",
+      "target": "notebooks_01_red_numpy_mse_loss",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "notebooks/01_red_numpy.py",
+      "source_location": "L65",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "notebooks_01_red_numpy",
+      "target": "notebooks_01_red_numpy_predict",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "notebooks/02_backpropagation_numpy.py",
+      "source_location": "L86",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "notebooks_02_backpropagation_numpy",
+      "target": "notebooks_02_backpropagation_numpy_backward",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "notebooks/02_backpropagation_numpy.py",
+      "source_location": "L81",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "notebooks_02_backpropagation_numpy",
+      "target": "notebooks_02_backpropagation_numpy_derivada_activacion",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "notebooks/02_backpropagation_numpy.py",
+      "source_location": "L46",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "notebooks_02_backpropagation_numpy",
+      "target": "notebooks_02_backpropagation_numpy_forward",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "notebooks/02_backpropagation_numpy.py",
+      "source_location": "L74",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "notebooks_02_backpropagation_numpy",
+      "target": "notebooks_02_backpropagation_numpy_mse",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "notebooks/02_backpropagation_numpy.py",
+      "source_location": "L43",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "notebooks_02_backpropagation_numpy",
+      "target": "notebooks_02_backpropagation_numpy_sigmoid",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "notebooks/02_backpropagation_numpy.py",
+      "source_location": "L49",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "notebooks_02_backpropagation_numpy_forward",
+      "target": "notebooks_02_backpropagation_numpy_sigmoid",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "notebooks/02_backpropagation_numpy.py",
+      "source_location": "L108",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "notebooks_02_backpropagation_numpy_backward",
+      "target": "notebooks_02_backpropagation_numpy_derivada_activacion",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "notebooks/02_backpropagation_numpy.py",
+      "source_location": "L87",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "notebooks_02_backpropagation_numpy_rationale_87",
+      "target": "notebooks_02_backpropagation_numpy_backward",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "src/__init__.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "src_init_rationale_1",
+      "target": "src_init",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "src/data.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "src_data_rationale_1",
+      "target": "src_data",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "src/evaluation.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "src_evaluation_rationale_1",
+      "target": "src_evaluation",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "src/training.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "src_training_rationale_1",
+      "target": "src_training",
+      "confidence_score": 1.0
+    }
+  ],
+  "hyperedges": []
+}

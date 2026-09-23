@@ -1,0 +1,58 @@
+# Python environments
+.venv/
+venv/
+env/
+ENV/
+
+# Python caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Jupyter
+.ipynb_checkpoints/
+.jupyter/
+
+# Local data and downloaded assets
+data/raw/
+data/processed/
+datasets/
+models/
+checkpoints/
+artifacts/
+
+# Model/checkpoint files
+*.ckpt
+*.pt
+*.pth
+*.safetensors
+*.bin
+*.onnx
+
+# Heavy binary experiment outputs
+results/**/*.npy
+results/**/*.npz
+results/**/*.parquet
+results/**/*.arrow
+results/**/*.pkl
+results/**/*.pickle
+
+# Temporary files and logs
+tmp/
+temp/
+*.tmp
+*.log
+
+# IDEs
+.vscode/
+.idea/
+
+# Credentials and local configuration
+.env
+.env.*
+!.env.example

@@ -1,0 +1,102 @@
+{
+  "communities": {
+    "0": [
+      "notebooks_01_red_numpy",
+      "notebooks_01_red_numpy_compute_gradientes",
+      "notebooks_01_red_numpy_mse_loss",
+      "notebooks_01_red_numpy_predict"
+    ],
+    "1": [
+      "notebooks_02_backpropagation_numpy",
+      "notebooks_02_backpropagation_numpy_forward",
+      "notebooks_02_backpropagation_numpy_mse",
+      "notebooks_02_backpropagation_numpy_sigmoid"
+    ],
+    "2": [
+      "notebooks_02_backpropagation_numpy_backward",
+      "notebooks_02_backpropagation_numpy_derivada_activacion",
+      "notebooks_02_backpropagation_numpy_rationale_87"
+    ],
+    "3": [
+      "src_data",
+      "src_data_rationale_1"
+    ],
+    "4": [
+      "src_evaluation",
+      "src_evaluation_rationale_1"
+    ],
+    "5": [
+      "src_init",
+      "src_init_rationale_1"
+    ],
+    "6": [
+      "src_training",
+      "src_training_rationale_1"
+    ],
+    "7": [
+      "notebooks_03_xor_pytorch_autograd"
+    ]
+  },
+  "cohesion": {
+    "0": 0.5,
+    "1": 0.6666666666666666,
+    "2": 0.6666666666666666,
+    "3": 1.0,
+    "4": 1.0,
+    "5": 1.0,
+    "6": 1.0,
+    "7": 1.0
+  },
+  "gods": [
+    {
+      "id": "notebooks_02_backpropagation_numpy_backward",
+      "label": "backward()",
+      "degree": 3
+    },
+    {
+      "id": "notebooks_02_backpropagation_numpy_sigmoid",
+      "label": "sigmoid()",
+      "degree": 2
+    },
+    {
+      "id": "notebooks_02_backpropagation_numpy_forward",
+      "label": "forward()",
+      "degree": 2
+    },
+    {
+      "id": "notebooks_02_backpropagation_numpy_derivada_activacion",
+      "label": "Derivada_Activacion()",
+      "degree": 2
+    },
+    {
+      "id": "notebooks_02_backpropagation_numpy_rationale_87",
+      "label": "Funci\u00f3n destinada al c\u00e1lculo de los gradientes de la red. Devolvemos: dw1, db1,\u2026",
+      "degree": 1
+    },
+    {
+      "id": "src_init_rationale_1",
+      "label": "Codigo reutilizable de Fine-Tuning Lab. Este paquete debe mantenerse pequeno.\u2026",
+      "degree": 1
+    },
+    {
+      "id": "src_data_rationale_1",
+      "label": "Funciones reutilizables para datos. Responsabilidad: Reunir, cuando haga falta,\u2026",
+      "degree": 1
+    },
+    {
+      "id": "src_evaluation_rationale_1",
+      "label": "Funciones reutilizables para evaluacion. Responsabilidad: Centralizar metricas\u2026",
+      "degree": 1
+    },
+    {
+      "id": "src_training_rationale_1",
+      "label": "Funciones reutilizables para entrenamiento. Responsabilidad: Guardar piezas\u2026",
+      "degree": 1
+    }
+  ],
+  "surprises": [],
+  "tokens": {
+    "input": 0,
+    "output": 0
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "notebooks/01_red_numpy.py": {
+    "mtime": 1788199521.388301,
+    "ast_hash": "1793691fec72de70fd24bf99c74e17ad",
+    "semantic_hash": "1793691fec72de70fd24bf99c74e17ad"
+  },
+  "notebooks/02_backpropagation_numpy.py": {
+    "mtime": 1787756339.6611772,
+    "ast_hash": "83ad1392f32e5c90237fb35ee123f16c",
+    "semantic_hash": "83ad1392f32e5c90237fb35ee123f16c"
+  },
+  "notebooks/03_xor_pytorch_autograd.py": {
+    "mtime": 1788370578.8914857,
+    "ast_hash": "070efe0a9f9c1aa7f98fcf60ccd790d1",
+    "semantic_hash": "070efe0a9f9c1aa7f98fcf60ccd790d1"
+  },
+  "results/01_red_numpy/metrics.json": {
+    "mtime": 1788199394.704372,
+    "ast_hash": "16c94f93e6f7bf75affa1910b50940ef",
+    "semantic_hash": "16c94f93e6f7bf75affa1910b50940ef"
+  },
+  "results/01_red_numpy/training_history.json": {
+    "mtime": 1788199394.708089,
+    "ast_hash": "797e46bc36238755c69d9b99b5828900",
+    "semantic_hash": "797e46bc36238755c69d9b99b5828900"
+  },
+  "results/02_backpropagation_numpy/metrics.json": {
+    "mtime": 1787172685.1552036,
+    "ast_hash": "761b49bb05b77fffe5972f2efc061397",
+    "semantic_hash": "761b49bb05b77fffe5972f2efc061397"
+  },
+  "src/__init__.py": {
+    "mtime": 1786024083.9695425,
+    "ast_hash": "322aa587e1ae265acacd3c757be69954",
+    "semantic_hash": "322aa587e1ae265acacd3c757be69954"
+  },
+  "src/data.py": {
+    "mtime": 1786024085.0276213,
+    "ast_hash": "3fcb2b73ef78e9903651822a00a9bbb8",
+    "semantic_hash": "3fcb2b73ef78e9903651822a00a9bbb8"
+  },
+  "src/evaluation.py": {
+    "mtime": 1786024087.199373,
+    "ast_hash": "fd087c1c0a64de4f5f3bb1fa1a887a88",
+    "semantic_hash": "fd087c1c0a64de4f5f3bb1fa1a887a88"
+  },
+  "src/training.py": {
+    "mtime": 1786024086.1372826,
+    "ast_hash": "e9cf8ae37151c23db12fada6e87f5a10",
+    "semantic_hash": "e9cf8ae37151c23db12fada6e87f5a10"
+  }
+}
