@@ -8,1157 +8,2949 @@ notebooks/02_backpropagation_numpy.py
 
 El objetivo no es memorizar formulas, sino entender que significa cada variable, por que cada gradiente tiene esa forma y como se relacionan las variables durante forward y backward.
 
-## 1. Problema que estamos resolviendo
-
-El dataset XOR es:
-
-```text
-x1  x2  y
-0   0   0
-1   0   1
-0   1   1
-1   1   0
-```
-
-En codigo:
-
-```python
-X = np.array([
-    (0, 0),
-    (1, 0),
-    (0, 1),
-    (1, 1),
-], dtype=float)
-
-y = np.array([
-    [0],
-    [1],
-    [1],
-    [0],
-], dtype=float)
-```
-
-Las shapes son:
-
-```text
-X.shape = (4, 2)
-y.shape = (4, 1)
-```
-
-Esto significa:
-
-```text
-4 ejemplos
-2 caracteristicas por ejemplo
-1 etiqueta por ejemplo
-```
-
-Cada fila de `X` es un ejemplo. Cada fila de `y` es la respuesta correcta de ese ejemplo.
-
-## 2. Por que XOR necesita una capa oculta
-
-Una neurona lineal simple calcula algo del tipo:
-
-```text
-z = x1*w1 + x2*w2 + b
-```
-
-Luego puede aplicar una activacion para producir una clase. Pero si solo tenemos una frontera lineal, la red separa el plano con una recta.
-
-XOR no puede separarse con una unica recta:
-
-```text
-(0,0) -> 0
-(1,1) -> 0
-(1,0) -> 1
-(0,1) -> 1
-```
-
-Los puntos de clase `1` estan en esquinas opuestas, y los puntos de clase `0` estan en las otras dos esquinas. Una sola linea no puede dejar unos a un lado y otros al otro.
-
-Por eso usamos:
-
-```text
-entrada -> capa oculta -> activacion no lineal -> salida
-```
-
-La capa oculta crea una representacion intermedia. La activacion no lineal permite que esa representacion no sea simplemente otra transformacion lineal.
-
-## 3. Arquitectura del experimento
-
-El modelo es:
-
-```text
-z1 = X @ W1 + b1
-a1 = sigmoid(z1)
-
-z2 = a1 @ W2 + b2
-y_pred = sigmoid(z2)
-```
-
-Con `Hidden_Neurons = 2`, las shapes son:
-
-```text
-X      = (4, 2)
-W1     = (2, 2)
-b1     = (1, 2)
-z1     = (4, 2)
-a1     = (4, 2)
-W2     = (2, 1)
-b2     = (1, 1)
-z2     = (4, 1)
-y_pred = (4, 1)
-```
-
-La red tiene dos capas entrenables:
-
-```text
-W1, b1 -> parametros de la capa oculta
-W2, b2 -> parametros de la capa de salida
-```
-
-## 4. Que significa una combinacion lineal
-
-Una combinacion lineal es una suma ponderada.
-
-Para una neurona:
-
-```text
-
-z = x1*w1 + x2*w2 + b
-```
-
-Los pesos deciden cuanto influye cada entrada. El bias desplaza el resultado.
-
-En forma matricial hacemos muchas combinaciones lineales a la vez.
-
-```python
-z1 = X @ W1 + b1
-```
-
-Con dos neuronas ocultas, `W1` tiene forma `(2, 2)`:
-
-```text
-W1 =
-[
-  [w_x1_h1, w_x1_h2],
-  [w_x2_h1, w_x2_h2],
-]
-```
-
-Para un ejemplo `i` y una neurona oculta `h`:
-
-```text
-z1[i,h] = X[i,0]*W1[0,h] + X[i,1]*W1[1,h] + b1[0,h]
-```
-
-Esto significa:
-
-```text
-la neurona oculta h mira las dos entradas del ejemplo i,
-las pondera con sus pesos,
-suma su bias,
-y produce un valor bruto z1[i,h].
-```
-
-El valor `z1` se llama "preactivacion" porque todavia no paso por sigmoid.
-
-## 5. Que hace la activacion sigmoid
-
-La sigmoid es:
-
-```text
-sigmoid(z) = 1 / (1 + exp(-z))
-```
-
-La usamos asi:
-
-```python
-a1 = sigmoid(z1)
-```
-
-Convierte cada valor de `z1` en un valor entre `0` y `1`.
-
-Interpretacion:
-
-```text
-z muy negativo -> sigmoid(z) cerca de 0
-z = 0          -> sigmoid(z) = 0.5
-z muy positivo -> sigmoid(z) cerca de 1
-```
-
-La activacion no lineal es necesaria porque:
-
-```text
-lineal -> lineal
-```
-
-sigue siendo lineal, pero:
-
-```text
-lineal -> sigmoid -> lineal
-```
-
-ya puede representar relaciones no lineales.
-
-## 6. Segunda combinacion lineal
-
-Despues de la capa oculta:
-
-```python
-z2 = a1 @ W2 + b2
-```
-
-Con `Hidden_Neurons = 2`, `a1` tiene dos valores por ejemplo:
-
-```text
-a1[i,0] -> activacion de la neurona oculta 1 para el ejemplo i
-a1[i,1] -> activacion de la neurona oculta 2 para el ejemplo i
-```
-
-`W2` tiene forma `(2, 1)`:
-
-```text
-W2 =
-[
-  [w_h1_out],
-  [w_h2_out],
-]
-```
-
-Para un ejemplo `i`:
-
-```text
-z2[i,0] = a1[i,0]*W2[0,0] + a1[i,1]*W2[1,0] + b2[0,0]
-```
+La red que estás construyendo es:
+
+$$
+\boxed{2 \rightarrow 2 \rightarrow 1}
+$$
 
 Es decir:
 
-```text
-la salida mira las activaciones ocultas,
-las pondera,
-suma un bias,
-y produce un valor bruto z2.
-```
+* 2 entradas: \(x_1,x_2\)
+* 2 neuronas ocultas
+* 1 neurona de salida
 
-Luego:
+y entrenamos los cuatro ejemplos XOR simultáneamente.
 
-```python
-y_pred = sigmoid(z2)
-```
+---
 
-`y_pred` es la prediccion final, tambien entre `0` y `1`.
+# 1. Antes de derivar nada: la arquitectura matemática
 
-## 7. Funcion de perdida MSE
+Tus datos son:
 
-La loss usada es:
+$$
+X =
+\begin{bmatrix}
+0&0\\
+1&0\\
+0&1\\
+1&1
+\end{bmatrix}
+$$
 
-```python
-loss = mean((y_pred - y) ** 2)
-```
+y
 
-Matematicamente:
+$$
+y =
+\begin{bmatrix}
+0\\
+1\\
+1\\
+0
+\end{bmatrix}
+$$
 
-```text
-L = (1/n) * sum_i (y_pred_i - y_i)^2
-```
+Por tanto:
 
-Donde:
+$$
+X\in\mathbb{R}^{4\times2}
+$$
 
-```text
-n = numero de ejemplos = 4
-```
+porque tenemos:
 
-La loss mide cuanto se equivoca el modelo.
+* 4 ejemplos
+* 2 características por ejemplo.
 
-Si `y_pred_i` esta cerca de `y_i`, el error es pequeno. Si esta lejos, el error al cuadrado es grande.
+Y:
 
-## 8. Objetivo del backward pass
+$$
+y\in\mathbb{R}^{4\times1}
+$$
 
-Durante el forward calculamos:
+La red hace esencialmente esto:
 
-```text
-X -> z1 -> a1 -> z2 -> y_pred -> loss
-```
+$$
+X
+\rightarrow Z_1
+\rightarrow A_1
+\rightarrow Z_2
+\rightarrow \hat y
+\rightarrow L
+$$
 
-Durante el backward queremos calcular:
+con:
 
-```text
-dL/dW1
-dL/db1
-dL/dW2
-dL/db2
-```
+$$
+Z_1=XW_1+b_1
+$$
 
-Cada gradiente responde:
+$$
+A_1=\sigma(Z_1)
+$$
 
-```text
-si cambio este parametro un poquito, cuanto cambia la loss?
-```
+$$
+Z_2=A_1W_2+b_2
+$$
 
-Ejemplo:
+$$
+\hat y=\sigma(Z_2)
+$$
 
-```text
-dL/dW2[0,0]
-```
+y finalmente:
 
-significa:
+$$
+L=\frac1n\sum_{i=1}^n(\hat y_i-y_i)^2
+$$
 
-```text
-si aumento un poquito el peso W2[0,0], la loss sube o baja?
-y cuanto?
-```
+---
 
-Si el gradiente es positivo, aumentar el parametro aumentaria la loss. Para reducir la loss, lo bajamos.
+# 2. Las shapes de toda la red
 
-Si el gradiente es negativo, aumentar el parametro bajaria la loss. Al restar un negativo, lo subimos.
+Este es probablemente el punto más importante antes de hablar de derivadas.
 
-La actualizacion siempre tiene esta forma:
+Tus matrices tienen:
 
-```text
-parametro = parametro - LR * gradiente
-```
+$$
+X:(4,2)
+$$
 
-## 9. Grafo de dependencias
+$$
+W_1:(2,2)
+$$
 
-Las variables dependen unas de otras:
+$$
+b_1:(1,2)
+$$
 
-```text
-W1,b1 -> z1 -> a1 -> z2 -> y_pred -> L
-W2,b2 --------^
-```
+$$
+W_2:(2,1)
+$$
 
-Mas explicitamente:
+$$
+b_2:(1,1)
+$$
 
-```text
-L depende de y_pred
-y_pred depende de z2
-z2 depende de a1, W2 y b2
-a1 depende de z1
-z1 depende de X, W1 y b1
-```
-
-`X` e `y` son datos. No se entrenan.
-
-`W1`, `b1`, `W2`, `b2` son parametros. Si se entrenan.
-
-Backpropagation aplica la regla de la cadena desde la loss hacia atras.
-
-## 10. Regla de la cadena
-
-La regla de la cadena dice:
-
-```text
-si L depende de a,
-y a depende de z,
-entonces:
-
-dL/dz = dL/da * da/dz
-```
-
-En nuestro caso:
+Podemos dibujarlo así:
 
 ```text
-L -> y_pred -> z2
+X             W1              A1             W2           y_pred
+
+(4,2)   @    (2,2)    ->    (4,2)    @    (2,1)   ->    (4,1)
+
+4 ejemplos      ↑                2 neuronas       ↑          1 salida
+2 features      │                ocultas          │
+                │                                  │
+            parámetros                         parámetros
 ```
 
-Entonces:
+La regla de multiplicación matricial es:
 
-```text
-dL/dz2 = dL/dy_pred * dy_pred/dz2
-```
+$$
+(m\times n)(n\times p)=(m\times p)
+$$
 
-Y para llegar mas atras:
-
-```text
-L -> y_pred -> z2 -> a1 -> z1 -> W1
-```
-
-Por eso cada paso del backward multiplica gradientes locales.
-
-## 11. Primer gradiente: `error = y_pred - y`
-
-En codigo:
-
-```python
-error = y_pred - y
-```
-
-Para cada ejemplo:
-
-```text
-error_i = y_pred_i - y_i
-```
-
-Interpretacion:
-
-```text
-error_i > 0 -> la red predijo demasiado alto
-error_i < 0 -> la red predijo demasiado bajo
-error_i = 0 -> la red acerto
-```
-
-Shape:
-
-```text
-error = (4, 1)
-```
-
-Una fila por ejemplo.
-
-## 12. Gradiente de la loss respecto a la prediccion
-
-Codigo:
-
-```python
-dloss_dypred = 2.0 * error / n
-```
-
-La loss es:
-
-```text
-L = (1/n) * sum_i (y_pred_i - y_i)^2
-```
-
-Para un ejemplo:
-
-```text
-dL/dy_pred_i = (2/n) * (y_pred_i - y_i)
-```
+Las dimensiones interiores tienen que coincidir.
 
 Por eso:
 
-```text
-dL/dy_pred = 2 * error / n
+$$
+(4\times2)(2\times2)
+=
+(4\times2)
+$$
+
+y después:
+
+$$
+(4\times2)(2\times1)
+=
+(4\times1)
+$$
+
+Esto no es casualidad. **Las shapes de los pesos están determinadas por el número de neuronas de cada capa.**
+
+---
+
+# 3. Qué representa realmente \(W_1\)
+
+Tienes:
+
+```python
+W1 = rng.normal(..., size=(2, 2))
 ```
 
-Significado:
+Con tu semilla concreta obtenemos aproximadamente:
+
+$$
+W_1=
+\begin{bmatrix}
+0.15236 & -0.51999\\
+0.37523 & 0.47028
+\end{bmatrix}
+$$
+
+Hay que entender muy bien qué significa cada elemento.
+
+Podemos etiquetarlo:
+
+$$
+W_1=
+\begin{bmatrix}
+w_{11}&w_{12}\\
+w_{21}&w_{22}
+\end{bmatrix}
+$$
+
+La **columna 1** contiene los pesos que llegan a la neurona oculta 1.
+
+La **columna 2** contiene los pesos que llegan a la neurona oculta 2.
+
+Así:
 
 ```text
-dloss_dypred dice como cambia la loss si cambia la prediccion final.
+x1 ── w11 ──> h1
+x2 ── w21 ──> h1
+
+x1 ── w12 ──> h2
+x2 ── w22 ──> h2
 ```
 
-Si una prediccion esta demasiado alta, este gradiente sera positivo. Si esta demasiado baja, sera negativo.
+Esto explica por qué \(W_1\) tiene shape:
+
+$$
+(\text{nº entradas},\text{nº neuronas})
+$$
+
+es decir:
+
+$$
+(2,2)
+$$
+
+---
+
+# 4. Forward: primera capa
+
+Tu código:
+
+```python
+z1 = X @ W1 + b1
+```
+
+Matemáticamente:
+
+$$
+Z_1=XW_1+b_1
+$$
+
+Empecemos pensando en **un solo ejemplo**:
+
+$$
+x=[x_1,x_2]
+$$
+
+entonces:
+
+$$
+[x_1,x_2]
+\begin{bmatrix}
+w_{11}&w_{12}\\
+w_{21}&w_{22}
+\end{bmatrix}
+$$
+
+produce:
+
+$$
+[
+x_1w_{11}+x_2w_{21},
+x_1w_{12}+x_2w_{22}
+]
+$$
+
+Luego añadimos los bias:
+
+$$
+z_1^{(1)}
+=
+x_1w_{11}+x_2w_{21}+b_{11}
+$$
+
+$$
+z_1^{(2)}
+=
+x_1w_{12}+x_2w_{22}+b_{12}
+$$
+
+Son exactamente las combinaciones lineales de las dos neuronas ocultas.
+
+---
+
+# 5. Hagámoslo con uno de tus ejemplos
+
+Tomemos:
+
+$$
+x=[1,0]
+$$
+
+Con:
+
+$$
+W_1=
+\begin{bmatrix}
+0.15236&-0.51999\\
+0.37523&0.47028
+\end{bmatrix}
+$$
+
+y inicialmente:
+
+$$
+b_1=[0,0]
+$$
+
+tenemos:
+
+$$
+z_1
+=
+[1,0]
+\begin{bmatrix}
+0.15236&-0.51999\\
+0.37523&0.47028
+\end{bmatrix}
+$$
+
+Primera neurona:
+
+$$
+1(0.15236)+0(0.37523)=0.15236
+$$
+
+Segunda:
+
+$$
+1(-0.51999)+0(0.47028)=-0.51999
+$$
+
+Por tanto:
+
+$$
+z_1=[0.15236,-0.51999]
+$$
+
+---
+
+# 6. ¿Qué hace sigmoid?
+
+Después haces:
+
+```python
+a1 = sigmoid(z1)
+```
+
+donde:
+
+$$
+\sigma(z)=\frac{1}{1+e^{-z}}
+$$
+
+Aplicándolo elemento a elemento:
+
+$$
+A_1=\sigma(Z_1)
+$$
+
+Para nuestro ejemplo:
+
+$$
+\sigma(0.15236)\approx0.53802
+$$
+
+$$
+\sigma(-0.51999)\approx0.37285
+$$
+
+Entonces:
+
+$$
+a_1=[0.53802,0.37285]
+$$
+
+Esta es la salida de las dos neuronas ocultas.
+
+---
+
+# 7. Lo interesante: haces los 4 ejemplos simultáneamente
+
+NumPy no calcula cada ejemplo por separado.
+
+Hace:
+
+$$
+XW_1
+$$
+
+completo.
+
+Con tus valores iniciales:
+
+$$
+Z_1=
+\begin{bmatrix}
+0&0\\
+0.15236&-0.51999\\
+0.37523&0.47028\\
+0.52758&-0.04971
+\end{bmatrix}
+$$
 
 Shape:
 
-```text
-dloss_dypred = (4, 1)
-```
+$$
+(4,2)
+$$
 
-## 13. Derivada de sigmoid
+Cada fila corresponde a un ejemplo.
 
-La sigmoid es:
+Cada columna a una neurona oculta.
 
-```text
-a = 1 / (1 + exp(-z))
-```
+Después:
 
-Su derivada es:
+$$
+A_1=\sigma(Z_1)
+$$
 
-```text
-da/dz = a * (1 - a)
-```
+obteniendo aproximadamente:
 
-En codigo:
+$$
+A_1=
+\begin{bmatrix}
+0.50000&0.50000\\
+0.53802&0.37285\\
+0.59272&0.61545\\
+0.62892&0.48758
+\end{bmatrix}
+$$
 
-```python
-def Derivada_Activacion(a):
-    return a * (1 - a)
-```
+Otra vez:
 
-Esta funcion recibe `a`, no `z`.
+$$
+A_1:(4,2)
+$$
 
-Para la salida:
+Aquí ya aparece una idea central de deep learning:
 
-```python
-dypred_dz2 = Derivada_Activacion(y_pred)
-```
+> una matriz representa simultáneamente un batch completo de ejemplos.
 
-Esto significa:
+---
 
-```text
-dy_pred/dz2
-```
+# 8. Segunda capa
 
-Es decir:
-
-```text
-cuanto cambia la prediccion final si cambia z2?
-```
-
-Si `y_pred` esta cerca de `0.5`, la sigmoid cambia bastante. Si `y_pred` esta cerca de `0` o `1`, cambia poco porque esta saturada.
-
-## 14. Gradiente respecto a `z2`
-
-Codigo:
-
-```python
-dz2 = dloss_dypred * dypred_dz2
-```
-
-Matematicamente:
-
-```text
-dL/dz2 = dL/dy_pred * dy_pred/dz2
-```
-
-Esto es regla de la cadena.
-
-`dz2` significa:
-
-```text
-cuanto cambia la loss si cambia z2?
-```
-
-Shape:
-
-```text
-dz2 = (4, 1)
-```
-
-Hay un valor por ejemplo.
-
-`dz2` es una senal de error en la capa de salida antes de la activacion.
-
-## 15. Gradiente de `W2`
-
-Forward:
+Ahora haces:
 
 ```python
 z2 = a1 @ W2 + b2
 ```
 
-Para un ejemplo `i`:
+Tienes:
+
+$$
+A_1:(4,2)
+$$
+
+y:
+
+$$
+W_2:(2,1)
+$$
+
+Con tu seed:
+
+$$
+W_2=
+\begin{bmatrix}
+-0.97552\\
+-0.65109
+\end{bmatrix}
+$$
+
+Por tanto:
+
+$$
+Z_2=A_1W_2+b_2
+$$
+
+Shape:
+
+$$
+(4,2)(2,1)=(4,1)
+$$
+
+Tiene muchísimo sentido.
+
+Cada ejemplo tiene dos activaciones ocultas:
+
+$$
+[a_{1},a_{2}]
+$$
+
+y queremos combinarlas para producir **una única salida**.
+
+Para el ejemplo anterior:
+
+$$
+a_1=[0.53802,0.37285]
+$$
+
+hacemos:
+
+$$
+z_2
+=
+0.53802(-0.97552)
++
+0.37285(-0.65109)
+$$
+
+aproximadamente:
+
+$$
+z_2=-0.76761
+$$
+
+Después:
+
+$$
+\hat y=\sigma(z_2)
+$$
+
+$$
+\hat y\approx0.3170
+$$
+
+---
+
+# 9. Las predicciones iniciales completas
+
+Tu red empieza produciendo aproximadamente:
+
+$$
+\hat y=
+\begin{bmatrix}
+0.30719\\
+0.31700\\
+0.27311\\
+0.28273
+\end{bmatrix}
+$$
+
+pero debería producir:
+
+$$
+y=
+\begin{bmatrix}
+0\\
+1\\
+1\\
+0
+\end{bmatrix}
+$$
+
+Por eso necesitamos entrenarla.
+
+---
+
+# 10. La función de pérdida MSE
+
+Tu código:
+
+```python
+error = y_pred - y
+return np.mean(error**2)
+```
+
+Matemáticamente:
+
+$$
+L
+=
+\frac1n
+\sum_{i=1}^{n}
+(\hat y_i-y_i)^2
+$$
+
+Aquí:
+
+$$
+n=4
+$$
+
+Por tanto:
+
+$$
+L=
+\frac14
+[
+(\hat y_1-y_1)^2+
+(\hat y_2-y_2)^2+
+(\hat y_3-y_3)^2+
+(\hat y_4-y_4)^2
+]
+$$
+
+Con las predicciones iniciales:
+
+$$
+L\approx0.29229
+$$
+
+---
+
+# 11. Ahora empieza lo realmente importante: backpropagation
+
+Queremos responder a esta pregunta:
+
+> ¿Cómo cambia el loss si modifico ligeramente cada peso?
+
+Es decir, queremos:
+
+$$
+\frac{\partial L}{\partial W_1},
+\quad
+\frac{\partial L}{\partial b_1},
+\quad
+\frac{\partial L}{\partial W_2},
+\quad
+\frac{\partial L}{\partial b_2}
+$$
+
+Eso son tus:
+
+```python
+dW1
+db1
+dW2
+db2
+```
+
+---
+
+# 12. El grafo matemático completo
+
+Tu forward es:
+
+$$
+W_1
+\rightarrow
+Z_1
+\rightarrow
+A_1
+\rightarrow
+Z_2
+\rightarrow
+\hat Y
+\rightarrow
+L
+$$
+
+En sentido forward:
 
 ```text
-z2[i,0] = a1[i,0]*W2[0,0] + a1[i,1]*W2[1,0] + b2[0,0]
+X
+ \
+  -> Z1 -> A1 -> Z2 -> y_pred -> Loss
+ /             /
+W1            W2
 ```
+
+Backpropagation recorre exactamente el camino contrario:
+
+```text
+Loss
+ ↓
+y_pred
+ ↓
+z2
+ ↓
+W2 / a1
+      ↓
+      z1
+      ↓
+      W1
+```
+
+Por eso tu código hace:
+
+```python
+dloss_dypred
+dz2
+dW2
+da1
+dz1
+dW1
+```
+
+No es una colección arbitraria de fórmulas.
+
+Es literalmente **recorrer al revés el grafo del forward usando la regla de cadena**.
+
+---
+
+# 13. Regla de cadena: el concepto fundamental
+
+Supón:
+
+$$
+L=f(y)
+$$
+
+pero:
+
+$$
+y=g(z)
+$$
+
+y:
+
+$$
+z=h(w)
+$$
+
+Entonces:
+
+$$
+L=f(g(h(w)))
+$$
 
 Queremos:
 
-```text
-dL/dW2
+$$
+\frac{dL}{dw}
+$$
+
+La regla de cadena dice:
+
+$$
+\boxed{
+\frac{dL}{dw}
+=
+\frac{dL}{dy}
+\frac{dy}{dz}
+\frac{dz}{dw}
+}
+$$
+
+Esta fórmula es esencialmente **todo backpropagation**.
+
+Para tu segunda capa:
+
+$$
+L
+\rightarrow
+\hat y
+\rightarrow
+z_2
+\rightarrow
+W_2
+$$
+
+Así:
+
+$$
+\boxed{
+\frac{\partial L}{\partial W_2}
+=
+\frac{\partial L}{\partial \hat y}
+\frac{\partial \hat y}{\partial z_2}
+\frac{\partial z_2}{\partial W_2}
+}
+$$
+
+Eso es exactamente lo que implementa tu código.
+
+---
+
+# 14. Primera derivada: MSE respecto a la predicción
+
+Tenemos:
+
+$$
+L=
+\frac1n
+\sum_i(\hat y_i-y_i)^2
+$$
+
+Para un ejemplo:
+
+$$
+L_i=\frac1n(\hat y_i-y_i)^2
+$$
+
+Derivamos respecto a \(\hat y_i\):
+
+$$
+\frac{\partial L_i}{\partial \hat y_i}
+=
+\frac1n
+\frac{\partial}{\partial\hat y_i}
+(\hat y_i-y_i)^2
+$$
+
+Aplicamos:
+
+$$
+\frac{d}{dx}x^2=2x
+$$
+
+Entonces:
+
+$$
+\boxed{
+\frac{\partial L}{\partial\hat y_i}
+=
+\frac{2}{n}(\hat y_i-y_i)
+}
+$$
+
+Que es exactamente:
+
+```python
+error = y_pred - y
+dloss_dypred = 2.0 * error / n
 ```
 
-Para el peso `W2[0,0]`:
+Shape:
 
-```text
-dz2[i,0]/dW2[0,0] = a1[i,0]
+$$
+(4,1)
+$$
+
+---
+
+# 15. Tus valores concretos
+
+El error es:
+
+$$
+\hat y-y
+=
+\begin{bmatrix}
+0.30719\\
+-0.68300\\
+-0.72689\\
+0.28273
+\end{bmatrix}
+$$
+
+Como:
+
+$$
+\frac2n=\frac24=0.5
+$$
+
+obtenemos:
+
+$$
+\frac{\partial L}{\partial\hat y}
+=
+\begin{bmatrix}
+0.15359\\
+-0.34150\\
+-0.36345\\
+0.14136
+\end{bmatrix}
+$$
+
+Observa algo interesante.
+
+Para el primer ejemplo:
+
+$$
+y=0,\quad\hat y=0.307
+$$
+
+el gradiente es positivo.
+
+Eso está diciendo:
+
+> para reducir el loss, sería conveniente hacer descender esta predicción.
+
+Para el segundo:
+
+$$
+y=1,\quad\hat y=0.317
+$$
+
+el gradiente es negativo.
+
+Eso indica que deberíamos aumentar la predicción.
+
+---
+
+# 16. Derivada de sigmoid
+
+Tu función es:
+
+$$
+\sigma(z)
+=
+\frac1{1+e^{-z}}
+$$
+
+Y escribiste:
+
+```python
+def Derivada_Activacion(a):
+    return a * (1-a)
 ```
 
-Porque `W2[0,0]` aparece multiplicando a `a1[i,0]`.
+¿Por qué?
 
-Por regla de la cadena:
+Vamos a derivarlo.
 
-```text
-dL/dW2[0,0] = sum_i dL/dz2[i,0] * dz2[i,0]/dW2[0,0]
+Partimos de:
+
+$$
+\sigma(z)=(1+e^{-z})^{-1}
+$$
+
+Derivamos:
+
+$$
+\sigma'(z)
+=
+-(1+e^{-z})^{-2}
+\cdot
+(-e^{-z})
+$$
+
+por lo que:
+
+$$
+\sigma'(z)
+=
+\frac{e^{-z}}
+{(1+e^{-z})^2}
+$$
+
+Podemos reescribir:
+
+$$
+\frac1{1+e^{-z}}
+\left(
+\frac{e^{-z}}{1+e^{-z}}
+\right)
+$$
+
+El primer término es:
+
+$$
+\sigma(z)
+$$
+
+y el segundo:
+
+$$
+1-\sigma(z)
+$$
+
+Por tanto:
+
+$$
+\boxed{
+\sigma'(z)
+=
+\sigma(z)(1-\sigma(z))
+}
+$$
+
+Como ya guardaste:
+
+$$
+a=\sigma(z)
+$$
+
+no necesitas volver a calcular sigmoid.
+
+Simplemente:
+
+$$
+\boxed{
+\sigma'(z)=a(1-a)
+}
+$$
+
+De ahí:
+
+```python
+return a * (1-a)
 ```
 
-Sustituyendo:
+---
 
-```text
-dL/dW2[0,0] = sum_i dz2[i,0] * a1[i,0]
+# 17. Regla de cadena entre loss y \(z_2\)
+
+Tenemos:
+
+$$
+\hat y=\sigma(z_2)
+$$
+
+Sabemos:
+
+$$
+\frac{\partial L}{\partial\hat y}
+$$
+
+y:
+
+$$
+\frac{\partial\hat y}{\partial z_2}
+=
+\hat y(1-\hat y)
+$$
+
+Por regla de cadena:
+
+$$
+\boxed{
+\frac{\partial L}{\partial z_2}
+=
+\frac{\partial L}{\partial\hat y}
+\odot
+\frac{\partial\hat y}{\partial z_2}
+}
+$$
+
+Uso \(\odot\) porque aquí estamos haciendo una **multiplicación elemento a elemento**, no matricial.
+
+Tu código:
+
+```python
+dypred_dz2 = Derivada_Activacion(y_pred)
+
+dz2 = dloss_dypred * dypred_dz2
 ```
 
-Para el segundo peso:
+Es muy importante distinguir:
 
-```text
-dL/dW2[1,0] = sum_i dz2[i,0] * a1[i,1]
+```python
+*
 ```
 
-En forma matricial:
+de:
+
+```python
+@
+```
+
+En NumPy:
+
+$$
+*
+$$
+
+es producto elemento a elemento.
+
+Mientras que:
+
+$$
+@
+$$
+
+es multiplicación matricial.
+
+---
+
+# 18. Shapes aquí
+
+Tenemos:
+
+$$
+\frac{\partial L}{\partial\hat y}:(4,1)
+$$
+
+y:
+
+$$
+\frac{\partial\hat y}{\partial z_2}:(4,1)
+$$
+
+Entonces:
+
+```python
+(4,1) * (4,1)
+```
+
+produce:
+
+$$
+(4,1)
+$$
+
+Tus valores aproximadamente son:
+
+$$
+dz_2=
+\begin{bmatrix}
+0.03269\\
+-0.07394\\
+-0.07215\\
+0.02867
+\end{bmatrix}
+$$
+
+Aquí:
+
+$$
+dz_2 \equiv \frac{\partial L}{\partial Z_2}
+$$
+
+---
+
+# 19. Ahora viene una de las partes más bonitas: ¿por qué `a1.T @ dz2`?
+
+Tu código:
 
 ```python
 dW2 = a1.T @ dz2
 ```
 
-Shapes:
+Puede parecer casi magia la primera vez.
 
-```text
-a1.shape   = (4, 2)
-a1.T.shape = (2, 4)
-dz2.shape  = (4, 1)
+Pero vamos a derivarlo.
 
-a1.T @ dz2 = (2, 1)
-```
+Tenemos:
 
-Y:
+$$
+Z_2=A_1W_2+b_2
+$$
 
-```text
-W2.shape = (2, 1)
-```
+Pensemos primero en un ejemplo.
 
-El gradiente tiene la misma shape que el parametro.
+La salida antes de sigmoid es:
 
-Interpretacion:
+$$
+z_2
+=
+a_{11}w_1+
+a_{12}w_2+b
+$$
 
-```text
-dW2 mide como deberian cambiar los pesos que conectan la capa oculta
-con la salida.
-```
+Queremos:
 
-Si una neurona oculta estuvo muy activa en ejemplos donde la salida fue demasiado alta, su peso hacia la salida recibira una correccion hacia abajo.
+$$
+\frac{\partial L}{\partial w_1}
+$$
 
-Si estuvo muy activa en ejemplos donde la salida fue demasiado baja, su peso recibira una correccion hacia arriba.
+Por regla de cadena:
 
-## 16. Gradiente de `b2`
+$$
+\frac{\partial L}{\partial w_1}
+=
+\frac{\partial L}{\partial z_2}
+\frac{\partial z_2}{\partial w_1}
+$$
 
-Forward:
+Pero:
 
-```text
-z2[i,0] = ... + b2[0,0]
-```
+$$
+\frac{\partial z_2}{\partial w_1}
+=
+a_{11}
+$$
 
-El bias `b2` se suma directamente a cada ejemplo.
+Por tanto:
+
+$$
+\frac{\partial L}{\partial w_1}
+=
+a_{11}
+\frac{\partial L}{\partial z_2}
+$$
+
+Análogamente:
+
+$$
+\frac{\partial L}{\partial w_2}
+=
+a_{12}
+\frac{\partial L}{\partial z_2}
+$$
+
+---
+
+# 20. Pero tenemos cuatro ejemplos
+
+Cada ejemplo contribuye al mismo peso.
+
+Así que:
+
+$$
+\frac{\partial L}{\partial w_1}
+=
+a_{11}^{(1)}\delta_1
++
+a_{11}^{(2)}\delta_2
++
+a_{11}^{(3)}\delta_3
++
+a_{11}^{(4)}\delta_4
+$$
+
+donde:
+
+$$
+\delta_i=\frac{\partial L}{\partial z_{2,i}}
+$$
+
+Esto se puede escribir como un producto escalar:
+
+$$
+\begin{bmatrix}
+a_{11}^{(1)}&
+a_{11}^{(2)}&
+a_{11}^{(3)}&
+a_{11}^{(4)}
+\end{bmatrix}
+\begin{bmatrix}
+\delta_1\\
+\delta_2\\
+\delta_3\\
+\delta_4
+\end{bmatrix}
+$$
+
+Y ahí aparece:
+
+$$
+A_1^T dz_2
+$$
+
+---
+
+# 21. Mira las shapes
+
+Originalmente:
+
+$$
+A_1:(4,2)
+$$
 
 Entonces:
 
-```text
-dz2[i,0]/db2[0,0] = 1
+$$
+A_1^T:(2,4)
+$$
+
+Y:
+
+$$
+dz_2:(4,1)
+$$
+
+Por tanto:
+
+$$
+(2,4)(4,1)=(2,1)
+$$
+
+exactamente la shape de:
+
+$$
+W_2:(2,1)
+$$
+
+Por eso:
+
+```python
+dW2 = a1.T @ dz2
 ```
 
-Por regla de la cadena:
+produce:
 
-```text
-dL/db2[0,0] = sum_i dL/dz2[i,0] * dz2[i,0]/db2[0,0]
-```
+$$
+dW_2:(2,1)
+$$
 
-Como la segunda parte vale `1`:
+Una propiedad muy útil es:
 
-```text
-dL/db2[0,0] = sum_i dz2[i,0]
-```
+$$
+\boxed{
+\operatorname{shape}
+\left(
+\frac{\partial L}{\partial W}
+\right)
+=
+\operatorname{shape}(W)
+}
+$$
 
-Codigo:
+Siempre.
+
+---
+
+# 22. El resultado numérico inicial
+
+En tu primera iteración:
+
+$$
+dW_2
+\approx
+\begin{bmatrix}
+-0.04817\\
+-0.04165
+\end{bmatrix}
+$$
+
+Esto significa:
+
+$$
+\frac{\partial L}{\partial W_{2,1}}
+\approx -0.04817
+$$
+
+$$
+\frac{\partial L}{\partial W_{2,2}}
+\approx -0.04165
+$$
+
+---
+
+# 23. ¿Y por qué el bias usa una suma?
+
+Tienes:
 
 ```python
 db2 = np.sum(dz2, axis=0, keepdims=True)
-```
-
-`axis=0` suma verticalmente, sobre los ejemplos.
-
-`keepdims=True` mantiene la shape:
-
-```text
-db2.shape = (1, 1)
-```
-
-Igual que:
-
-```text
-b2.shape = (1, 1)
-```
-
-Interpretacion:
-
-```text
-db2 dice si conviene desplazar hacia arriba o hacia abajo
-la preactivacion final z2 para todos los ejemplos.
-```
-
-## 17. Propagar el error hacia la capa oculta: `da1`
-
-Codigo:
-
-```python
-da1 = dz2 @ W2.T
-```
-
-Queremos saber:
-
-```text
-dL/da1
-```
-
-Es decir:
-
-```text
-cuanto cambia la loss si cambia la activacion oculta a1?
 ```
 
 Recordemos:
 
+$$
+z_2=a_1W_2+b_2
+$$
+
+Para cada ejemplo:
+
+$$
+\frac{\partial z_2}{\partial b_2}=1
+$$
+
+Por tanto:
+
+$$
+\frac{\partial L}{\partial b_2}
+=
+\sum_i
+\frac{\partial L}{\partial z_{2,i}}
+$$
+
+Es decir:
+
+$$
+\boxed{
+db_2=\sum_i dz_{2,i}
+}
+$$
+
+Aquí:
+
+$$
+db_2\approx -0.08473
+$$
+
+Shape:
+
+$$
+(1,1)
+$$
+
+igual que:
+
+$$
+b_2:(1,1)
+$$
+
+---
+
+# 24. Ahora tenemos que llevar el error hacia atrás
+
+Hasta ahora hemos llegado aquí:
+
 ```text
-z2[i,0] = a1[i,0]*W2[0,0] + a1[i,1]*W2[1,0] + b2[0,0]
+Loss
+  ↓
+y_pred
+  ↓
+ z2
+ ↓
+W2
 ```
 
-Para una activacion oculta:
+Pero para modificar \(W_1\) necesitamos continuar:
 
 ```text
-dz2[i,0]/da1[i,0] = W2[0,0]
-dz2[i,0]/da1[i,1] = W2[1,0]
+z2
+ ↓
+a1
+ ↓
+z1
+ ↓
+W1
 ```
 
-Por regla de la cadena:
+Tenemos:
 
-```text
-dL/da1[i,h] = dL/dz2[i,0] * dz2[i,0]/da1[i,h]
-```
+$$
+z_2=A_1W_2+b_2
+$$
 
-Sustituyendo:
+y queremos:
 
-```text
-dL/da1[i,h] = dz2[i,0] * W2[h,0]
-```
+$$
+\frac{\partial L}{\partial A_1}
+$$
 
-En forma matricial:
+Tu código:
 
 ```python
 da1 = dz2 @ W2.T
 ```
 
-Shapes:
+Veamos por qué.
 
-```text
-dz2.shape  = (4, 1)
-W2.T.shape = (1, 2)
+---
 
-dz2 @ W2.T = (4, 2)
+# 25. Derivación de `dz2 @ W2.T`
+
+Para un solo ejemplo:
+
+$$
+z_2=a_1^{(1)}w_1+a_1^{(2)}w_2+b
+$$
+
+Por tanto:
+
+$$
+\frac{\partial z_2}{\partial a_1^{(1)}}=w_1
+$$
+
+y:
+
+$$
+\frac{\partial z_2}{\partial a_1^{(2)}}=w_2
+$$
+
+Aplicando regla de cadena:
+
+$$
+\frac{\partial L}{\partial a_1^{(1)}}
+=
+\frac{\partial L}{\partial z_2}
+w_1
+$$
+
+$$
+\frac{\partial L}{\partial a_1^{(2)}}
+=
+\frac{\partial L}{\partial z_2}
+w_2
+$$
+
+En vector:
+
+$$
+\frac{\partial L}{\partial A_1}
+=
+dz_2W_2^T
+$$
+
+---
+
+# 26. Shapes de esta propagación
+
+Tenemos:
+
+$$
+dz_2:(4,1)
+$$
+
+$$
+W_2:(2,1)
+$$
+
+por tanto:
+
+$$
+W_2^T:(1,2)
+$$
+
+y:
+
+$$
+(4,1)(1,2)
+=
+(4,2)
+$$
+
+exactamente la shape de:
+
+$$
+A_1:(4,2)
+$$
+
+Así:
+
+```python
+da1 = dz2 @ W2.T
 ```
+
+produce:
+
+$$
+da_1:(4,2)
+$$
+
+Este paso es muy importante conceptualmente:
+
+> el error de una única neurona de salida se reparte hacia las dos neuronas ocultas de acuerdo con los pesos que las conectaban con ella.
+
+Si un peso \(W_2\) es grande, esa neurona oculta tenía mucha influencia en la salida y recibe proporcionalmente más gradiente.
+
+---
+
+# 27. Tus valores concretos
+
+Inicialmente:
+
+$$
+W_2^T=
+[-0.97552,-0.65109]
+$$
+
+y:
+
+$$
+dz_2=
+\begin{bmatrix}
+0.03269\\
+-0.07394\\
+-0.07215\\
+0.02867
+\end{bmatrix}
+$$
+
+Entonces:
+
+$$
+da_1\approx
+\begin{bmatrix}
+-0.03189&-0.02128\\
+0.07213&0.04814\\
+0.07038&0.04698\\
+-0.02797&-0.01867
+\end{bmatrix}
+$$
+
+Shape:
+
+$$
+(4,2)
+$$
+
+---
+
+# 28. Ahora volvemos a atravesar una sigmoid
+
+Recordemos:
+
+$$
+A_1=\sigma(Z_1)
+$$
+
+Tenemos:
+
+$$
+\frac{\partial L}{\partial A_1}
+$$
+
+pero necesitamos:
+
+$$
+\frac{\partial L}{\partial Z_1}
+$$
+
+Por regla de cadena:
+
+$$
+\frac{\partial L}{\partial Z_1}
+=
+\frac{\partial L}{\partial A_1}
+\odot
+\frac{\partial A_1}{\partial Z_1}
+$$
 
 Y:
 
-```text
-a1.shape = (4, 2)
-```
+$$
+\frac{\partial A_1}{\partial Z_1}
+=
+A_1(1-A_1)
+$$
 
-Interpretacion:
+Entonces:
 
-```text
-da1 reparte la senal de error de la salida hacia las neuronas ocultas.
-```
+$$
+\boxed{
+dZ_1
+=
+dA_1\odot A_1(1-A_1)
+}
+$$
 
-Si una conexion `W2[h,0]` es grande, la neurona oculta `h` influye mucho en la salida. Por eso recibe mas senal de error.
-
-Si una conexion `W2[h,0]` es pequena, esa neurona influye menos en la salida. Por eso recibe menos senal de error.
-
-## 18. Gradiente respecto a `z1`
-
-Codigo:
+Tu código:
 
 ```python
 da1_dz1 = Derivada_Activacion(a1)
 dz1 = da1 * da1_dz1
 ```
 
-Sabemos:
+Exactamente eso.
 
-```text
-a1 = sigmoid(z1)
-```
+Las shapes:
+
+$$
+da_1:(4,2)
+$$
+
+$$
+a_1(1-a_1):(4,2)
+$$
+
+por lo que:
+
+$$
+dz_1:(4,2)
+$$
+
+---
+
+# 29. Valores iniciales
+
+Obtienes aproximadamente:
+
+$$
+dz_1=
+\begin{bmatrix}
+-0.00797&-0.00532\\
+0.01793&0.01126\\
+0.01699&0.01112\\
+-0.00653&-0.00466
+\end{bmatrix}
+$$
+
+Esto contiene:
+
+$$
+\frac{\partial L}{\partial z_{1,ij}}
+$$
+
+para cada ejemplo \(i\) y cada neurona oculta \(j\).
+
+---
+
+# 30. Finalmente llegamos a \(W_1\)
+
+Tenemos:
+
+$$
+Z_1=XW_1+b_1
+$$
 
 Queremos:
 
-```text
-dL/dz1
+$$
+\frac{\partial L}{\partial W_1}
+$$
+
+Exactamente igual que hicimos con \(W_2\):
+
+$$
+\boxed{
+dW_1=X^Tdz_1
+}
+$$
+
+Tu código:
+
+```python
+dW1 = X.T @ dz1
 ```
 
-Por regla de la cadena:
+Shapes:
+
+$$
+X:(4,2)
+$$
+
+Entonces:
+
+$$
+X^T:(2,4)
+$$
+
+y:
+
+$$
+dz_1:(4,2)
+$$
+
+Por tanto:
+
+$$
+(2,4)(4,2)=(2,2)
+$$
+
+que coincide exactamente con:
+
+$$
+W_1:(2,2)
+$$
+
+---
+
+# 31. ¿Qué está sumando realmente esa multiplicación?
+
+Esta es una parte que merece detenerse.
+
+Tenemos:
+
+$$
+X^T=
+\begin{bmatrix}
+0&1&0&1\\
+0&0&1&1
+\end{bmatrix}
+$$
+
+y:
+
+$$
+dZ_1=
+\begin{bmatrix}
+\delta_{11}&\delta_{12}\\
+\delta_{21}&\delta_{22}\\
+\delta_{31}&\delta_{32}\\
+\delta_{41}&\delta_{42}
+\end{bmatrix}
+$$
+
+Entonces:
+
+$$
+dW_1=X^TdZ_1
+$$
+
+produce:
+
+$$
+\begin{bmatrix}
+0&1&0&1\\
+0&0&1&1
+\end{bmatrix}
+\begin{bmatrix}
+\delta_{11}&\delta_{12}\\
+\delta_{21}&\delta_{22}\\
+\delta_{31}&\delta_{32}\\
+\delta_{41}&\delta_{42}
+\end{bmatrix}
+$$
+
+Resultado:
+
+$$
+\begin{bmatrix}
+\delta_{21}+\delta_{41}
+&
+\delta_{22}+\delta_{42}
+\\
+\delta_{31}+\delta_{41}
+&
+\delta_{32}+\delta_{42}
+\end{bmatrix}
+$$
+
+¿Por qué?
+
+Porque solamente los ejemplos donde una entrada vale 1 contribuyen al gradiente del peso correspondiente.
+
+---
+
+# 32. Tu \(dW_1\) inicial
+
+Obtienes:
+
+$$
+dW_1
+\approx
+\begin{bmatrix}
+0.01140&0.00659\\
+0.01046&0.00645
+\end{bmatrix}
+$$
+
+Y:
+
+$$
+db_1
+\approx
+\begin{bmatrix}
+0.02042&0.01239
+\end{bmatrix}
+$$
+
+Fíjate otra vez:
+
+$$
+dW_1:(2,2)
+$$
+
+igual que:
+
+$$
+W_1:(2,2)
+$$
+
+y:
+
+$$
+db_1:(1,2)
+$$
+
+igual que:
+
+$$
+b_1:(1,2)
+$$
+
+---
+
+# 33. Podemos condensar todo el backward en cuatro ecuaciones
+
+Toda tu función `backward()` esencialmente calcula esto:
+
+## Salida
+
+$$
+\boxed{
+dZ_2
+=
+\frac{2}{n}(\hat Y-Y)
+\odot
+\hat Y(1-\hat Y)
+}
+$$
+
+Después:
+
+$$
+\boxed{
+dW_2=A_1^TdZ_2
+}
+$$
+
+$$
+\boxed{
+db_2=\sum_{\text{batch}}dZ_2
+}
+$$
+
+## Capa oculta
+
+$$
+\boxed{
+dA_1=dZ_2W_2^T
+}
+$$
+
+$$
+\boxed{
+dZ_1
+=
+dA_1
+\odot
+A_1(1-A_1)
+}
+$$
+
+Finalmente:
+
+$$
+\boxed{
+dW_1=X^TdZ_1
+}
+$$
+
+$$
+\boxed{
+db_1=\sum_{\text{batch}}dZ_1
+}
+$$
+
+Eso es todo tu backpropagation.
+
+---
+
+# 34. El mapa de shapes completo
+
+Este esquema te recomiendo tenerlo muy presente:
 
 ```text
-dL/dz1 = dL/da1 * da1/dz1
+FORWARD
+=======
+
+X
+(4,2)
+
+  @ W1
+    (2,2)
+  -------
+Z1
+(4,2)
+
+ sigmoid
+  ↓
+
+A1
+(4,2)
+
+  @ W2
+    (2,1)
+  -------
+Z2
+(4,1)
+
+ sigmoid
+  ↓
+
+Y_pred
+(4,1)
+
+  ↓
+
+Loss
+scalar
 ```
 
-Donde:
+Y ahora al revés:
 
 ```text
-da1/dz1 = a1 * (1 - a1)
+BACKWARD
+========
+
+Loss
+  ↓
+
+dY_pred
+(4,1)
+
+  * sigmoid'(Z2)
+  ↓
+
+dZ2
+(4,1)
+
+        ┌──────────────┐
+        │              │
+        ↓              ↓
+
+A1.T @ dZ2       dZ2 @ W2.T
+
+(2,4)(4,1)       (4,1)(1,2)
+
+     ↓                 ↓
+
+dW2                  dA1
+(2,1)                (4,2)
+
+                       *
+                 sigmoid'(Z1)
+                       ↓
+
+                     dZ1
+                     (4,2)
+
+                       ↓
+
+                 X.T @ dZ1
+
+                (2,4)(4,2)
+
+                       ↓
+
+                     dW1
+                     (2,2)
 ```
+
+---
+
+# 35. Una regla extraordinariamente útil para recordar las fórmulas
+
+Para una capa genérica:
+
+$$
+Z=AW+b
+$$
+
+si durante backpropagation conoces:
+
+$$
+dZ=\frac{\partial L}{\partial Z}
+$$
+
+entonces siempre tienes:
+
+$$
+\boxed{dW=A^TdZ}
+$$
+
+$$
+\boxed{db=\sum dZ}
+$$
+
+$$
+\boxed{dA=dZW^T}
+$$
+
+Estas tres ecuaciones aparecen continuamente en redes neuronales.
+
+En tu segunda capa:
+
+$$
+Z_2=A_1W_2+b_2
+$$
+
+entonces:
+
+$$
+dW_2=A_1^TdZ_2
+$$
+
+$$
+db_2=\sum dZ_2
+$$
+
+$$
+dA_1=dZ_2W_2^T
+$$
+
+En tu primera capa:
+
+$$
+Z_1=XW_1+b_1
+$$
+
+entonces:
+
+$$
+dW_1=X^TdZ_1
+$$
+
+$$
+db_1=\sum dZ_1
+$$
+
+Y podrías incluso calcular:
+
+$$
+dX=dZ_1W_1^T
+$$
+
+aunque no lo necesitas porque \(X\) no es un parámetro entrenable.
+
+---
+
+# 36. ¿De dónde salen las transpuestas?
+
+Esta es una duda fundamental.
+
+No están puestas simplemente para "hacer cuadrar shapes".
+
+Aparecen naturalmente al derivar la multiplicación matricial.
+
+Si:
+
+$$
+Z=AW
+$$
+
+las tres relaciones diferenciales fundamentales son:
+
+$$
+\boxed{
+dW=A^TdZ
+}
+$$
+
+y:
+
+$$
+\boxed{
+dA=dZW^T
+}
+$$
+
+Observa la simetría:
+
+```text
+Forward:
+
+A @ W
+  ↓
+  Z
+
+
+Backward hacia W:
+
+A.T @ dZ
+   ↓
+   dW
+
+
+Backward hacia A:
+
+dZ @ W.T
+   ↓
+   dA
+```
+
+Esto merece memorizarse, pero **después de entender de dónde viene**, no como una fórmula arbitraria.
+
+---
+
+# 37. La intuición del producto matricial durante backpropagation
+
+Puedes pensar que `dZ` contiene:
+
+> cuánto importa cada neurona para el error.
+
+Entonces:
+
+```python
+A.T @ dZ
+```
+
+pregunta:
+
+> ¿cuánto contribuyó cada entrada de esa neurona a ese error?
+
+Mientras:
+
+```python
+dZ @ W.T
+```
+
+pregunta:
+
+> ¿cuánto del error debo devolver a cada neurona anterior, teniendo en cuenta cuánto influía sobre esta neurona?
+
+Es una forma bastante buena de desarrollar intuición.
+
+---
+
+# 38. Actualización mediante gradient descent
+
+Una vez calculados los gradientes haces:
+
+```python
+W1 = W1 - LR * dW1
+```
+
+etc.
+
+Matemáticamente:
+
+$$
+W_1^{nuevo}
+=
+W_1^{viejo}
+-
+\eta
+\frac{\partial L}{\partial W_1}
+$$
+
+donde:
+
+$$
+\eta=LR=0.5
+$$
+
+¿Por qué restamos?
+
+Porque el gradiente apunta en la dirección de **máximo crecimiento** de la función.
+
+Si:
+
+$$
+\nabla L
+$$
+
+apunta hacia donde \(L\) aumenta más rápido, entonces:
+
+$$
+-\nabla L
+$$
+
+apunta hacia donde disminuye.
 
 Por eso:
 
-```text
-dz1 = da1 * a1 * (1 - a1)
+$$
+\boxed{
+\theta\leftarrow\theta-\eta\nabla_\theta L
+}
+$$
+
+---
+
+# 39. Ejemplo con uno de tus pesos
+
+Inicialmente:
+
+$$
+W_{1,11}=0.15235854
+$$
+
+y encontramos:
+
+$$
+\frac{\partial L}{\partial W_{1,11}}
+\approx0.01140124
+$$
+
+Con:
+
+$$
+LR=0.5
+$$
+
+el cambio es:
+
+$$
+0.5(0.01140124)=0.00570062
+$$
+
+Entonces:
+
+$$
+W_{1,11}^{nuevo}
+=
+0.15235854-0.00570062
+$$
+
+$$
+\boxed{
+W_{1,11}^{nuevo}\approx0.14665792
+}
+$$
+
+La red acaba de modificar ligeramente ese peso en una dirección que localmente debería reducir el error.
+
+Y haces esto con **todos los parámetros simultáneamente**.
+
+---
+
+# 40. Una epoch completa matemáticamente
+
+Cada iteración de:
+
+```python
+for epoch in range(Epochs):
 ```
 
-Shape:
+realiza exactamente:
+
+### 1. Forward
+
+$$
+Z_1=XW_1+b_1
+$$
+
+$$
+A_1=\sigma(Z_1)
+$$
+
+$$
+Z_2=A_1W_2+b_2
+$$
+
+$$
+\hat Y=\sigma(Z_2)
+$$
+
+### 2. Loss
+
+$$
+L=
+\frac1n
+\|\hat Y-Y\|_2^2
+$$
+
+### 3. Backward
+
+$$
+dZ_2=
+\frac2n(\hat Y-Y)
+\odot
+\hat Y(1-\hat Y)
+$$
+
+$$
+dW_2=A_1^TdZ_2
+$$
+
+$$
+db_2=\sum dZ_2
+$$
+
+$$
+dA_1=dZ_2W_2^T
+$$
+
+$$
+dZ_1=dA_1\odot A_1(1-A_1)
+$$
+
+$$
+dW_1=X^TdZ_1
+$$
+
+$$
+db_1=\sum dZ_1
+$$
+
+### 4. Gradient descent
+
+$$
+W_1\leftarrow W_1-\eta dW_1
+$$
+
+$$
+b_1\leftarrow b_1-\eta db_1
+$$
+
+$$
+W_2\leftarrow W_2-\eta dW_2
+$$
+
+$$
+b_2\leftarrow b_2-\eta db_2
+$$
+
+Y vuelves a empezar.
+
+---
+
+# 41. Un detalle profundo: aquí el batch size es 4
+
+Tú no estás entrenando ejemplo por ejemplo.
+
+Estás pasando:
+
+$$
+X:(4,2)
+$$
+
+completo.
+
+Por tanto estás haciendo **full-batch gradient descent**.
+
+Los cuatro ejemplos participan en cada actualización de pesos.
+
+Eso explica por qué aparecen sumas como:
+
+$$
+A_1^TdZ_2
+$$
+
+La multiplicación matricial está acumulando simultáneamente la contribución al gradiente de los cuatro ejemplos.
+
+Con millones de ejemplos normalmente se emplean minibatches:
+
+$$
+X_{\text{batch}}
+\in
+\mathbb R^{B\times D}
+$$
+
+por ejemplo:
+
+$$
+B=32,\quad D=784
+$$
+
+Pero la matemática sería exactamente la misma.
+
+---
+
+# 42. El patrón general escala a redes enormes
+
+Lo interesante es que lo que estás haciendo aquí con:
 
 ```text
-dz1 = (4, 2)
+2 → 2 → 1
 ```
 
-Interpretacion:
+es conceptualmente lo mismo que ocurre en redes con millones de parámetros.
 
-```text
-dz1 es la senal de error en la capa oculta antes de la activacion.
+Supón una capa:
+
+$$
+X:(64,768)
+$$
+
+$$
+W:(768,3072)
+$$
+
+Entonces:
+
+$$
+Z=XW
+$$
+
+produce:
+
+$$
+(64,768)(768,3072)
+=
+(64,3072)
+$$
+
+Durante backward, si:
+
+$$
+dZ:(64,3072)
+$$
+
+entonces:
+
+$$
+dW=X^TdZ
+$$
+
+$$
+(768,64)(64,3072)
+=
+(768,3072)
+$$
+
+Exactamente la misma fórmula que:
+
+```python
+dW1 = X.T @ dz1
 ```
 
-Esto ya no es simplemente el error de salida. Es el error de salida propagado hacia atras, filtrado por:
+en tu pequeña red XOR.
 
-- los pesos `W2`, que dicen cuanto influyo cada neurona oculta;
-- la derivada de sigmoid, que dice si esa neurona podia cambiar mucho o estaba saturada.
+Esto es precisamente lo valioso de hacer este experimento desde NumPy: estás viendo directamente la matemática que los frameworks esconden.
 
-## 19. Gradiente de `W1`
+---
 
-Forward:
+# 43. Diferencia entre `*` y `@` en tu red
+
+En tu código aparecen dos operaciones completamente distintas.
+
+## Producto elemento a elemento
+
+```python
+dz2 = dloss_dypred * dypred_dz2
+```
+
+Aquí:
+
+$$
+\begin{bmatrix}
+a\\b\\c
+\end{bmatrix}
+\odot
+\begin{bmatrix}
+x\\y\\z
+\end{bmatrix}
+=
+\begin{bmatrix}
+ax\\by\\cz
+\end{bmatrix}
+$$
+
+No mezclamos neuronas ni ejemplos.
+
+Cada elemento afecta a su correspondiente elemento.
+
+Es la regla de cadena elemento a elemento.
+
+---
+
+## Producto matricial
+
+```python
+dW2 = a1.T @ dz2
+```
+
+Aquí sí tenemos:
+
+$$
+C_{ij}
+=
+\sum_k A_{ik}B_{kj}
+$$
+
+Es decir, cada elemento resultante contiene una **suma de productos**.
+
+Esta operación sirve para agregar cómo distintos ejemplos/neuronas contribuyeron a un determinado peso.
+
+---
+
+# 44. Y el broadcasting de los biases
+
+También ocurre algo interesante aquí:
 
 ```python
 z1 = X @ W1 + b1
 ```
 
-Para un ejemplo `i` y neurona oculta `h`:
+Tenemos:
 
-```text
-z1[i,h] = X[i,0]*W1[0,h] + X[i,1]*W1[1,h] + b1[0,h]
-```
+$$
+XW_1:(4,2)
+$$
 
-Queremos:
+pero:
 
-```text
-dL/dW1
-```
+$$
+b_1:(1,2)
+$$
 
-Para un peso concreto:
+NumPy hace broadcasting.
 
-```text
-dz1[i,h]/dW1[j,h] = X[i,j]
-```
+Es conceptualmente como si:
 
-Porque `W1[j,h]` aparece multiplicando a la entrada `X[i,j]`.
+$$
+b_1=
+[b_1,b_2]
+$$
 
-Por regla de la cadena:
+se replicase cuatro veces:
 
-```text
-dL/dW1[j,h] = sum_i dL/dz1[i,h] * dz1[i,h]/dW1[j,h]
-```
+$$
+\begin{bmatrix}
+b_1&b_2\\
+b_1&b_2\\
+b_1&b_2\\
+b_1&b_2
+\end{bmatrix}
+$$
 
-Sustituyendo:
+y después:
 
-```text
-dL/dW1[j,h] = sum_i dz1[i,h] * X[i,j]
-```
+$$
+Z_1=XW_1+B
+$$
 
-En forma matricial:
+Eso explica también por qué al hacer backward debemos sumar sobre las filas:
 
 ```python
-dW1 = X.T @ dz1
+db1 = np.sum(dz1, axis=0, keepdims=True)
 ```
 
-Shapes:
+Como un mismo bias se utilizó para los cuatro ejemplos, su gradiente recibe contribución de los cuatro.
 
-```text
-X.shape    = (4, 2)
-X.T.shape  = (2, 4)
-dz1.shape  = (4, 2)
+---
 
-X.T @ dz1  = (2, 2)
+# 45. `axis=0` tiene un significado matemático
+
+Tienes:
+
+$$
+dz_1:(4,2)
+$$
+
+por ejemplo:
+
+$$
+\begin{bmatrix}
+a&b\\
+c&d\\
+e&f\\
+g&h
+\end{bmatrix}
+$$
+
+Cuando haces:
+
+```python
+np.sum(dz1, axis=0)
 ```
 
-Y:
+eliminas la dimensión de las filas:
 
-```text
-W1.shape = (2, 2)
+$$
+[a+c+e+g,\;b+d+f+h]
+$$
+
+Por tanto:
+
+$$
+(4,2)\rightarrow(2,)
+$$
+
+Con:
+
+```python
+keepdims=True
 ```
 
-Interpretacion:
+mantienes:
 
-```text
-dW1 dice como cambiar los pesos que conectan las entradas con las neuronas ocultas.
-```
+$$
+(1,2)
+$$
 
-Este gradiente es mas indirecto que `dW2`, porque `W1` no afecta directamente a la salida. Afecta a:
+que coincide con:
 
-```text
-W1 -> z1 -> a1 -> z2 -> y_pred -> loss
-```
+$$
+b_1:(1,2)
+$$
 
-Backpropagation calcula exactamente esa cadena.
+---
 
-## 20. Gradiente de `b1`
+# 46. Una manera muy poderosa de razonar sobre las shapes
 
-Forward:
+Cuando estés implementando redes manualmente, puedes comprobar constantemente:
 
-```text
-z1[i,h] = ... + b1[0,h]
-```
+$$
+\boxed{
+\text{shape}(d\theta)=\text{shape}(\theta)
+}
+$$
+
+Así:
+
+| Parámetro |   Shape | Gradiente |   Shape |
+| --------- | ------: | --------- | ------: |
+| \(W_1\)   | `(2,2)` | \(dW_1\)  | `(2,2)` |
+| \(b_1\)   | `(1,2)` | \(db_1\)  | `(1,2)` |
+| \(W_2\)   | `(2,1)` | \(dW_2\)  | `(2,1)` |
+| \(b_2\)   | `(1,1)` | \(db_2\)  | `(1,1)` |
+
+Si esto no ocurre, casi seguramente tienes un error en el backward.
+
+---
+
+# 47. Regla de cadena completa para un peso concreto
+
+Vamos ahora a llevarlo al extremo, porque aquí es donde realmente se entiende backprop.
+
+Supón que queremos saber:
+
+$$
+\frac{\partial L}{\partial w_{11}^{(1)}}
+$$
+
+es decir, un peso de la primera capa.
+
+El camino hasta el loss es:
+
+$$
+w_{11}^{(1)}
+\rightarrow
+z_{1,1}
+\rightarrow
+a_{1,1}
+\rightarrow
+z_2
+\rightarrow
+\hat y
+\rightarrow
+L
+$$
+
+Así:
+
+$$
+\boxed{
+\frac{\partial L}{\partial w_{11}^{(1)}}
+=
+\frac{\partial L}{\partial\hat y}
+\frac{\partial\hat y}{\partial z_2}
+\frac{\partial z_2}{\partial a_{1,1}}
+\frac{\partial a_{1,1}}{\partial z_{1,1}}
+\frac{\partial z_{1,1}}{\partial w_{11}^{(1)}}
+}
+$$
+
+Cada término tiene sentido.
+
+Sabemos que:
+
+$$
+\frac{\partial L}{\partial\hat y}
+=
+\frac2n(\hat y-y)
+$$
+
+$$
+\frac{\partial\hat y}{\partial z_2}
+=
+\hat y(1-\hat y)
+$$
+
+$$
+\frac{\partial z_2}{\partial a_{1,1}}
+=
+w_{2,1}
+$$
+
+$$
+\frac{\partial a_{1,1}}{\partial z_{1,1}}
+=
+a_{1,1}(1-a_{1,1})
+$$
+
+$$
+\frac{\partial z_{1,1}}{\partial w_{11}^{(1)}}
+=
+x_1
+$$
 
 Entonces:
 
-```text
-dz1[i,h]/db1[0,h] = 1
-```
+$$
+\boxed{
+\frac{\partial L}{\partial w_{11}^{(1)}}
+=
+\frac2n(\hat y-y)
+\hat y(1-\hat y)
+w_{2,1}
+a_{1,1}(1-a_{1,1})
+x_1
+}
+$$
 
-Por regla de la cadena:
+Para un solo ejemplo.
 
-```text
-dL/db1[0,h] = sum_i dL/dz1[i,h]
-```
+Después sumamos las contribuciones de todos los ejemplos.
 
-Codigo:
+Y esto es exactamente lo que tus operaciones matriciales calculan de golpe.
+
+---
+
+# 48. Esto es probablemente la idea central de todo el código
+
+Las matrices **no cambian la matemática de las derivadas**.
+
+Simplemente permiten calcular miles o millones de expresiones como:
+
+$$
+\frac{\partial L}{\partial w}
+$$
+
+simultáneamente.
+
+Es decir:
+
+> backpropagation puede entenderse escalar por escalar, pero se implementa matricialmente porque hacerlo así es enormemente más eficiente.
+
+Tu código es ambas cosas a la vez:
 
 ```python
-db1 = np.sum(dz1, axis=0, keepdims=True)
+dz2 = ...
+dW2 = a1.T @ dz2
+da1 = dz2 @ W2.T
+dz1 = ...
+dW1 = X.T @ dz1
 ```
 
-Shape:
+Cada línea compacta potencialmente cientos, miles o millones de derivadas escalares.
 
-```text
-db1.shape = (1, 2)
+---
+
+# 49. La red completa en una única expresión
+
+Incluso podríamos escribir tu red como:
+
+$$
+\boxed{
+\hat Y
+=
+\sigma
+\left(
+\sigma(XW_1+b_1)W_2+b_2
+\right)
+}
+$$
+
+Y el loss:
+
+$$
+\boxed{
+L(W_1,b_1,W_2,b_2)
+=
+\frac1n
+\left\|
+\sigma
+\left(
+\sigma(XW_1+b_1)W_2+b_2
+\right)
+-Y
+\right\|^2
+}
+$$
+
+Cuando llamas a:
+
+```python
+backward(...)
 ```
 
-Igual que:
+lo que realmente estás haciendo es calcular:
 
-```text
-b1.shape = (1, 2)
-```
+$$
+\nabla L
+=
+\left[
+\frac{\partial L}{\partial W_1},
+\frac{\partial L}{\partial b_1},
+\frac{\partial L}{\partial W_2},
+\frac{\partial L}{\partial b_2}
+\right]
+$$
 
-Interpretacion:
+de esa gigantesca función compuesta.
 
-```text
-db1 ajusta el umbral de activacion de cada neurona oculta.
-```
+---
 
-Si una neurona oculta necesita activarse mas para ciertos ejemplos, el bias puede desplazarse. Si necesita activarse menos, tambien.
+# 50. La jerarquía mental que te recomiendo
 
-## 21. Resumen completo del backward
+Para entender redes neuronales matemáticamente, yo separaría lo que estás aprendiendo en estas **cinco capas conceptuales**:
 
-Codigo:
+1. **Escalar:** entender una sola neurona:
+
+   $$
+   z=w_1x_1+w_2x_2+b
+   $$
+
+2. **Regla de cadena:** entender:
+
+   $$
+   \frac{\partial L}{\partial w}
+   =
+   \frac{\partial L}{\partial a}
+   \frac{\partial a}{\partial z}
+   \frac{\partial z}{\partial w}
+   $$
+
+3. **Una capa completa:** entender:
+
+   $$
+   Z=XW+b
+   $$
+
+4. **Forma matricial del backward:**
+
+   $$
+   dW=X^TdZ,\qquad
+   dX=dZW^T
+   $$
+
+5. **Una red completa:** encadenar todas las capas anteriores.
+
+Tu código ya contiene las cinco. Esa es precisamente la razón por la que es un buen ejercicio.
+
+---
+
+## Tu `backward()` traducido literalmente a matemáticas
+
+Finalmente, puedes leer tu función así:
 
 ```python
 error = y_pred - y
-dloss_dypred = 2.0 * error / n
+dloss_dypred = 2.0 * error/n
+```
 
-dypred_dz2 = Derivada_Activacion(y_pred)
+$$
+\frac{\partial L}{\partial\hat Y}
+=
+\frac2n(\hat Y-Y)
+$$
+
+```python
+dypred_dz2 = y_pred * (1-y_pred)
 dz2 = dloss_dypred * dypred_dz2
+```
 
+$$
+dZ_2=
+\frac{\partial L}{\partial\hat Y}
+\odot
+\sigma'(Z_2)
+$$
+
+```python
 dW2 = a1.T @ dz2
-db2 = np.sum(dz2, axis=0, keepdims=True)
+```
 
+$$
+dW_2=A_1^TdZ_2
+$$
+
+```python
+db2 = np.sum(dz2, axis=0)
+```
+
+$$
+db_2=\sum_i dZ_{2,i}
+$$
+
+```python
 da1 = dz2 @ W2.T
-
-da1_dz1 = Derivada_Activacion(a1)
-dz1 = da1 * da1_dz1
-
-dW1 = X.T @ dz1
-db1 = np.sum(dz1, axis=0, keepdims=True)
 ```
 
-Lectura conceptual:
-
-```text
-1. error:
-   cuanto se equivoco la red en la salida.
-
-2. dloss_dypred:
-   cuanto cambia la loss si cambia y_pred.
-
-3. dypred_dz2:
-   cuanto cambia y_pred si cambia z2.
-
-4. dz2:
-   cuanto cambia la loss si cambia z2.
-
-5. dW2:
-   como cambian los pesos de salida para bajar la loss.
-
-6. db2:
-   como cambia el bias de salida para bajar la loss.
-
-7. da1:
-   como se reparte el error hacia las activaciones ocultas.
-
-8. dz1:
-   cuanto cambia la loss si cambia z1.
-
-9. dW1:
-   como cambian los pesos de la primera capa para bajar la loss.
-
-10. db1:
-    como cambian los bias de la primera capa para bajar la loss.
-```
-
-## 22. Por que usamos transpuestas
-
-Aparecen dos transpuestas:
+$$
+dA_1=dZ_2W_2^T
+$$
 
 ```python
-dW2 = a1.T @ dz2
+dz1 = da1 * a1*(1-a1)
+```
+
+$$
+dZ_1=dA_1\odot\sigma'(Z_1)
+$$
+
+```python
 dW1 = X.T @ dz1
 ```
 
-No son trucos. Son la forma matricial de sumar contribuciones de todos los ejemplos.
-
-Para `dW2`:
-
-```text
-a1.T = (hidden, ejemplos)
-dz2  = (ejemplos, salida)
-
-a1.T @ dz2 = (hidden, salida)
-```
-
-Esto agrega, para cada neurona oculta, cuanto contribuyo a los errores de salida de todos los ejemplos.
-
-Para `dW1`:
-
-```text
-X.T  = (features, ejemplos)
-dz1  = (ejemplos, hidden)
-
-X.T @ dz1 = (features, hidden)
-```
-
-Esto agrega, para cada entrada y cada neurona oculta, cuanto contribuyo esa entrada al error interno de esa neurona.
-
-## 23. Por que los bias se suman
-
-Los pesos conectan una entrada concreta con una neurona concreta.
-
-Los bias se suman a todos los ejemplos:
-
-```text
-z = ... + b
-```
-
-Como el mismo bias afecta a todos los ejemplos, su gradiente acumula la senal de error de todos ellos:
+$$
+dW_1=X^TdZ_1
+$$
 
 ```python
-db2 = np.sum(dz2, axis=0, keepdims=True)
-db1 = np.sum(dz1, axis=0, keepdims=True)
+db1 = np.sum(dz1, axis=0)
 ```
 
-No multiplicamos por entradas porque el bias no multiplica ninguna entrada.
+$$
+db_1=\sum_i dZ_{1,i}
+$$
 
-Su derivada local es `1`.
+Ese bloque de unas diez líneas es, esencialmente, **todo el algoritmo de backpropagation para tu red**.
 
-## 24. Por que el gradiente tiene la misma shape que el parametro
+En el siguiente nivel útil de este experimento, yo iría todavía más despacio y cogería **solo el ejemplo \(X=(1,0), y=1\)**, eliminando temporalmente el batch. Podemos calcular a mano, número por número, los dos valores de \(z_1\), las dos sigmoides, \(z_2\), \(\hat y\), el MSE y después **cada una de las derivadas hasta llegar a los cuatro pesos**, dibujando simultáneamente el grafo computacional. Después volveríamos a introducir las matrices `(4,2)` y verías exactamente cómo NumPy convierte esas cuatro cuentas individuales en `X.T @ dz1`. Esa sería la mejor forma de hacer que la regla de cadena y las multiplicaciones matriciales dejen de parecer fórmulas memorizadas y se vuelvan intuitivas.
 
-Cada elemento del parametro necesita su propia derivada.
 
-Si:
 
-```text
-W1.shape = (2, 2)
-```
 
-entonces:
-
-```text
-dW1.shape = (2, 2)
-```
-
-Porque cada peso tiene una pregunta distinta:
-
-```text
-que pasa con la loss si cambio W1[0,0]?
-que pasa con la loss si cambio W1[0,1]?
-que pasa con la loss si cambio W1[1,0]?
-que pasa con la loss si cambio W1[1,1]?
-```
-
-Lo mismo ocurre con:
-
-```text
-W2 -> dW2
-b1 -> db1
-b2 -> db2
-```
-
-## 25. Por que restamos el gradiente
-
-El gradiente apunta hacia donde la loss sube mas rapido.
-
-Si queremos bajar la loss, vamos en direccion contraria:
-
-```python
-W1 = W1 - LR * dW1
-b1 = b1 - LR * db1
-W2 = W2 - LR * dW2
-b2 = b2 - LR * db2
-```
-
-`LR` controla el tamano del paso.
-
-Si `LR` es demasiado pequeno, aprende muy lento.
-
-Si `LR` es demasiado grande, puede saltarse el minimo, oscilar o divergir.
-
-## 26. Que significa que un paso baje la perdida
-
-El experimento registra:
-
-```text
-Loss antes de un paso:   0.2922916243810897
-Loss despues de un paso: 0.28637467082417883
-```
-
-Esto significa que, con los gradientes calculados:
-
-```text
-W1 - LR*dW1
-b1 - LR*db1
-W2 - LR*dW2
-b2 - LR*db2
-```
-
-produjo parametros ligeramente mejores para esa ejecucion inicial.
-
-Es una prueba de sanidad importante.
-
-## 27. Que significa la convergencia final
-
-Predicciones finales:
-
-```text
-[[0.03908334],
- [0.95662095],
- [0.95598973],
- [0.03531293]]
-```
-
-Con umbral `0.5`:
-
-```text
-0.039 -> 0
-0.956 -> 1
-0.955 -> 1
-0.035 -> 0
-```
-
-La red aprendio XOR:
-
-```text
-[[0],
- [1],
- [1],
- [0]]
-```
-
-La loss final:
-
-```text
-0.0016485673777804845
-```
-
-es pequena porque las predicciones estan cerca de las etiquetas.
-
-## 28. Idea principal que hay que recordar
-
-Backpropagation no es magia. Es la regla de la cadena aplicada de forma organizada.
-
-El forward construye dependencias:
-
-```text
-X -> z1 -> a1 -> z2 -> y_pred -> L
-```
-
-El backward recorre esas dependencias al reves:
-
-```text
-L -> y_pred -> z2 -> a1 -> z1 -> parametros
-```
-
-Cada linea del backward responde una pregunta local:
-
-```text
-cuanto cambia esta variable si cambia la anterior?
-```
-
-Y al multiplicar esas respuestas locales, obtenemos:
-
-```text
-cuanto cambia la loss si cambio cada parametro?
-```
-
-Eso es exactamente lo que necesitamos para aprender.
