@@ -1,0 +1,30 @@
+{
+  "experiment": "04_clasificacion_pytorch_dataloader",
+  "configuration": {
+    "seed": 42,
+    "epochs": 300,
+    "learning_rate": 0.1,
+    "samples": 700,
+    "noise_std": 3,
+    "train_fraction": 0.7,
+    "batch_size": 32,
+    "base_threshold": 0.5,
+    "negative_confidence_threshold": 0.3,
+    "positive_confidence_threshold": 0.7
+  },
+  "dataset": {
+    "train_examples": 489,
+    "validation_examples": 211
+  },
+  "model": {
+    "name": "BinaryLinearClassifier",
+    "trainable_parameters": 3
+  },
+  "final_metrics": {
+    "train_loss": 0.5849446884693543,
+    "validation_loss": 0.6277369266437693,
+    "base_accuracy": 0.6161137440758294,
+    "confidence_accuracy": 0.6851851851851852,
+    "coverage": 0.7677725118483413
+  }
+}

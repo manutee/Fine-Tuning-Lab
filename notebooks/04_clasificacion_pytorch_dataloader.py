@@ -11,10 +11,10 @@ from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 
 SEED = 42
-EPOCHS = 500
-LR = 0.5
+EPOCHS = 300
+LR = 0.1
 SAMPLES = 700
-NOISE = 1.5
+NOISE = 3
 Train_split = 0.7
 Batch_size = 32
 
@@ -190,8 +190,8 @@ for epoch in range(EPOCHS):
                 # Accuracy con incertidumbre
                 #===============================================================
 
-                Positive_threshold = (probs >= 0.7)
-                Negative_threshold = (probs <= 0.3)
+                Positive_threshold = (probs >= 0.55)
+                Negative_threshold = (probs <= 0.45)
 
                 # Hacemos un OR, confianza puede ser satisfecha por cualquier umbral
                 Confidence = Positive_threshold | Negative_threshold
