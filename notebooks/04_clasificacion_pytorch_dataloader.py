@@ -1,16 +1,29 @@
+import json
+from pathlib import Path
+
 import numpy as np
+import matplotlib
+
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import torch
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 
 SEED = 42
-EPOCHS = 100
+EPOCHS = 500
 LR = 0.5
 SAMPLES = 700
 NOISE = 1.5
 Train_split = 0.7
 Batch_size = 32
+
+RESULTS_DIR = (
+    Path(__file__).resolve().parents[1]
+    / "results"
+    / "04_clasificacion_pytorch_dataloader"
+)
+RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
 torch.manual_seed(SEED)
 
@@ -38,39 +51,27 @@ Y = torch.cat([Negs_Y, Pos_Y], dim = 0)
 # Aplicamos una permutacion a los ejemplos para mezclar positivos y negativos
 permutation = torch.randperm(SAMPLES)
 
+X = X[permutation]
+Y = Y[permutation]
+
 # Convertimos la matriz (SAMPLES X 1) en un vector 1D con las etiquetas
 labels = Y.squeeze(1)
-
 negs = labels == 0
 pos = labels == 1
 
 plt.figure(figsize=(8,6))
 
 plt.scatter(X[negs, 0], X[negs,1], label = 'Clase negativa', alpha = 0.8)
-plt.scatter(X[pos, 0], X[pos,1], label = 'Clase negativa', alpha = 0.8)
-
-plt.grid(True)
-plt.title('Dataset Sintetico sin mezclar')
-plt.xlabel('Característica postiva')
-plt.ylabel('Característica negativa')
-plt.legend()
-plt.show()
-
-X = X[permutation]
-Y = Y[permutation]
-
-
-plt.figure(figsize=(8,6))
-
-plt.scatter(X[negs, 0], X[negs,1], label = 'Clase negativa', alpha = 0.8)
-plt.scatter(X[pos, 0], X[pos,1], label = 'Clase negativa', alpha = 0.8)
+plt.scatter(X[pos, 0], X[pos,1], label = 'Clase positiva', alpha = 0.8)
 
 plt.grid(True)
 plt.title('Dataset Sintetico mezclado')
 plt.xlabel('Característica postiva')
 plt.ylabel('Característica negativa')
 plt.legend()
-plt.show()
+plt.axis("equal")
+plt.savefig(RESULTS_DIR / "dataset_by_class.png", dpi=150, bbox_inches="tight")
+plt.close()
 
 
 train_size = int(SAMPLES * Train_split)
@@ -125,6 +126,7 @@ val_loss_history = []
 train_loss_history =[]
 val_acc_treshold_history = []
 val_base_acc_history = []
+coverage_history = []
 
 
 
@@ -219,6 +221,7 @@ for epoch in range(EPOCHS):
     val_loss_history.append(val_loss)
     val_base_acc_history.append (base_accuracy)
     val_acc_treshold_history.append(confidence_accuracy)
+    coverage_history.append(coverage)
 
     if epoch % 10 == 0 or epoch == (EPOCHS -1):
          print(
@@ -231,33 +234,38 @@ for epoch in range(EPOCHS):
          )
 
 
-#==================================================================
-
-
+# Inidcamos model.eval para usar el modelo en inferencia post entrenamiento
 model.eval()
-
+# Sin el margen el grafico se cortaría exactamente en los puntos mas alejado por arriba y por abajo
 margin = 0.5
 
+# X tiene shape (Samples x 2), cogemos todas las filas y la primera característica
+# De la primera característica cogemos la menor y la mayor para los limites horizontales
 x_min = X[:, 0].min().item() - margin
 x_max = X[:, 0].max().item() + margin
 
+# Cogemos la segunda caracterísitca y hacemos lo mismo para delimitar los verticales
 y_min = X[:, 1].min().item() - margin
 y_max = X[:, 1].max().item() + margin
 
-grid_x, grid_y = np.meshgrid(
-    np.linspace(x_min, x_max, 250),
-    np.linspace(y_min, y_max, 250),
-)
+# Construimos una cuadricula de 250 x 250 puntos
+# Ambos grid_x y grid_y tienen forma (250, 250) donde cada posicion (i,j) es un punto X o Y en el plano
+grid_x, grid_y = np.meshgrid(np.linspace(x_min,x_max, 250),np.linspace(y_min,y_max,250),)
 
-grid_points = torch.tensor(
-    np.column_stack([grid_x.ravel(), grid_y.ravel()]),
-    dtype=torch.float32,
-)
+# Con ravel aplanamos la matriz a 1D y con column stack contruimos una matriz donde
+# Se corresponde cada valor de x con su valor de y, es decir (250 x 250) -> (62500, 2)
+grid_points = torch.tensor(np.column_stack([grid_x.ravel(), grid_y.ravel()]), dtype = torch.float32,)
+# Luego convertimos la matriz en un tensor compatible con los pesos
 
+# Solo queremos generar predicciones para dibujar, por ende hacemos no_grad
 with torch.no_grad():
+    # Le pasamos al modelo los grid points con shape (62500, 2)    
     grid_logits = model(grid_points)
+    # Los logits toman shape (62500, 1)
     grid_probs = torch.sigmoid(grid_logits)
+    # Hacemos un reshape donde cada probabilidad ocupa de nuevo su posicion dentro de la malla
     grid_probs = grid_probs.reshape(grid_x.shape).numpy()
+    # El .numpy convierte el tensor en una matriz numpy
 
 labels = Y.squeeze(1)
 negative_mask = labels == 0
@@ -265,39 +273,19 @@ positive_mask = labels == 1
 
 plt.figure(figsize=(8, 7))
 
-background = plt.contourf(
-    grid_x,
-    grid_y,
-    grid_probs,
-    levels=20,
-    cmap="RdBu_r",
-    alpha=0.35,
-)
+# Significa filled contours, que son regiones rellenas de color
+# Grid_probs son las probabilidades que da el modelo en ese punto,
+# Y levels la cantidad de bandas de color donde se distribuyen las probs
+background = plt.contourf(grid_x,grid_y,grid_probs,levels=20,cmap="RdBu_r",alpha=0.35,)
 
+# Escala que explica cada color de fondo
 plt.colorbar(background, label="Probabilidad de clase positiva")
 
-plt.contour(
-    grid_x,
-    grid_y,
-    grid_probs,
-    levels=[0.3, 0.5, 0.7],
-    colors="black",
-    linestyles=["--", "-", "--"],
-)
+plt.contour(grid_x,grid_y,grid_probs,levels=[0.3, 0.5, 0.7],colors="black",linestyles=["--", "-", "--"],)
 
-plt.scatter(
-    X[negative_mask, 0],
-    X[negative_mask, 1],
-    label="Clase 0",
-    alpha=0.7,
-)
+plt.scatter(X[negative_mask, 0],X[negative_mask, 1],label="Clase 0",alpha=0.7,)
 
-plt.scatter(
-    X[positive_mask, 0],
-    X[positive_mask, 1],
-    label="Clase 1",
-    alpha=0.7,
-)
+plt.scatter(X[positive_mask, 0],X[positive_mask, 1],label="Clase 1",alpha=0.7,)
 
 plt.xlabel("Caracteristica 1")
 plt.ylabel("Caracteristica 2")
@@ -305,9 +293,11 @@ plt.title("Frontera de decision y regiones de confianza")
 plt.grid(True)
 plt.legend()
 plt.axis("equal")
-plt.show()
 
-#=======================================================================================
+plt.savefig(RESULTS_DIR / "decision_boundary.png", dpi=150, bbox_inches="tight")
+plt.close()
+
+
 
 epochs_axis = range(1, EPOCHS + 1)
 
@@ -319,7 +309,9 @@ plt.ylabel("BCE loss")
 plt.title("Curvas de perdida")
 plt.grid(True)
 plt.legend()
-plt.show()
+
+plt.savefig(RESULTS_DIR / "loss_curves.png", dpi=150, bbox_inches="tight")
+plt.close()
 
 plt.figure(figsize=(8, 4))
 plt.plot(epochs_axis, val_base_acc_history)
@@ -328,13 +320,66 @@ plt.ylabel("Validation accuracy")
 plt.title("Accuracy de validacion base")
 plt.grid(True)
 plt.ylim(0.0, 1.0)
-plt.show()
+
+plt.savefig(RESULTS_DIR / "base_accuracy_curve.png", dpi=150, bbox_inches="tight")
+plt.close()
 
 plt.figure(figsize=(8, 4))
-plt.plot(epochs_axis, val_acc_treshold_history)
+plt.plot(epochs_axis, val_acc_treshold_history, label="Confidence accuracy")
+plt.plot(epochs_axis, coverage_history, label="Coverage")
 plt.xlabel("Epoch")
-plt.ylabel("Validation accuracy")
-plt.title("Accuracy de validacion con incertidumbre")
+plt.ylabel("Metric value")
+plt.title("Metricas de confianza en validacion")
 plt.grid(True)
 plt.ylim(0.0, 1.0)
-plt.show()
+plt.legend()
+
+plt.savefig(RESULTS_DIR / "confidence_metrics.png", dpi=150, bbox_inches="tight")
+plt.close()
+
+metrics = {
+    "experiment": "04_clasificacion_pytorch_dataloader",
+    "configuration": {
+        "seed": SEED,
+        "epochs": EPOCHS,
+        "learning_rate": LR,
+        "samples": SAMPLES,
+        "noise_std": NOISE,
+        "train_fraction": Train_split,
+        "batch_size": Batch_size,
+        "base_threshold": 0.5,
+        "negative_confidence_threshold": 0.3,
+        "positive_confidence_threshold": 0.7,
+    },
+    "dataset": {
+        "train_examples": len(train_dataset),
+        "validation_examples": len(val_dataset),
+    },
+    "model": {
+        "name": "BinaryLinearClassifier",
+        "trainable_parameters": sum(parameter.numel() for parameter in model.parameters()),
+    },
+    "final_metrics": {
+        "train_loss": train_loss_history[-1],
+        "validation_loss": val_loss_history[-1],
+        "base_accuracy": val_base_acc_history[-1],
+        "confidence_accuracy": val_acc_treshold_history[-1],
+        "coverage": coverage_history[-1],
+    },
+}
+
+training_history = {
+    "epoch": list(epochs_axis),
+    "train_loss": train_loss_history,
+    "validation_loss": val_loss_history,
+    "base_accuracy": val_base_acc_history,
+    "confidence_accuracy": val_acc_treshold_history,
+    "coverage": coverage_history,
+}
+
+(RESULTS_DIR / "metrics.json").write_text(
+    json.dumps(metrics, indent=2),
+    encoding="utf-8",
+)
+
+print(f"Resultados guardados en: {RESULTS_DIR}")
